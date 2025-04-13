@@ -54,15 +54,15 @@ router.post(
 ); // Создать продукт (только админ)
 router.put(
   "/api/store/products/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   upload.array("image", 5),
   editProduct
 ); // Обновить продукт (только админ)
 router.delete(
   "/api/store/products/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   deleteProductById
 ); // Удалить продукт (только админ)
 
@@ -71,50 +71,50 @@ router.get("/api/store/categories", getAllCategories); // Получить вс�
 router.get("/api/store/categories/:id", getCategoryById); // Получить категорию по ID (доступно всем)
 router.post(
   "/api/store/categories",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   createCategory
 ); // Создать категорию (только админ)
 router.put(
   "/api/store/categories/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   editCategory
 ); // Обновить категорию (только админ)
 router.delete(
   "/api/store/categories/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   deleteCategoryById
 ); // Удалить категорию (только админ)
 
 // Заказы (Order) - CRUD
 router.get(
   "/api/store/orders",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   getAllOrders
 ); // Получить все заказы (только админ)
 router.get(
   "/api/store/orders/:id",
-  passport.authenticate("jwt", { session: false }),
+//   passport.authenticate("jwt", { session: false }),
   getOrderById
 ); // Получить заказ по ID (доступно пользователю, если заказ его)
 router.post(
   "/api/store/orders",
-  passport.authenticate("jwt", { session: false }),
+//   passport.authenticate("jwt", { session: false }),
   createOrder
 ); // Создать заказ (доступно аутентифицированным пользователям)
 router.put(
   "/api/store/orders/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   editOrder
 ); // Обновить заказ (только админ)
 router.delete(
   "/api/store/orders/:id",
-  passport.authenticate("jwt", { session: false }),
-  isAdmin,
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
   deleteOrderById
 ); // Удалить заказ (только админ)
 

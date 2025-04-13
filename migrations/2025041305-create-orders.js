@@ -1,26 +1,24 @@
-// src/migrations/2025041305-create-orders.js
 'use strict';
-const { DataTypes } = require('sequelize');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Orders', {
+    await queryInterface.createTable('orders', {
       id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       product_ids: {
         type: Sequelize.ARRAY(Sequelize.ARRAY(Sequelize.INTEGER)),
-        allowNull: true,
+        allowNull: false,
       },
       username: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       address: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING,
         allowNull: false,
       },
       phone: {
@@ -30,9 +28,10 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
+        defaultValue: 'pending',
       },
       totalPrice: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: Sequelize.FLOAT,
         allowNull: false,
       },
       userId: {
@@ -40,17 +39,19 @@ module.exports = {
         allowNull: false,
       },
       createdAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Orders');
+    await queryInterface.dropTable('orders');
   },
 };

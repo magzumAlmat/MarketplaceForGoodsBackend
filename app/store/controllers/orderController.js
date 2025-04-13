@@ -1,5 +1,6 @@
 // src/controllers/orderController.js
-const { Order, Product } = require('../models');
+const  Product  = require('../models/Product');
+const Order =require('../models/Order')
 
 exports.getAllOrders = async (req, res) => {
   try {
@@ -31,7 +32,7 @@ exports.getOrderById = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const { productIds, username, address, phone, status } = req.body;
-
+    console.log('create order data= ' ,productIds, username, address, phone, status)
     // Валидация
     if (!productIds || !Array.isArray(productIds) || !username || !address || !phone) {
       return res.status(400).json({ message: 'Необходимы productIds, username, address и phone' });
@@ -41,6 +42,7 @@ exports.createOrder = async (req, res) => {
     const products = await Product.findAll({
       where: { id: productIds },
     });
+    console.log('products= ',products)
     if (products.length !== productIds.length) {
       return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
     }
@@ -57,7 +59,8 @@ exports.createOrder = async (req, res) => {
       phone,
       status: status || 'pending',
       totalPrice,
-      userId: req.user.id, // Предполагаем, что userId берётся из JWT
+      // userId: req.user.id, 
+      userId:1
     });
 
     return res.status(201).json(order);

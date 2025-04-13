@@ -33,6 +33,8 @@ app.get('/',(req,res)=>{
 // })
 
 app.use(require('./app/store/routes/routes'))
+const orderRoutes = require('./app/store/routes/routes'); // Путь к твоим роутам
+app.use('/api', orderRoutes);
 // app.use(require('./app/region/routes'))
 // app.use(require('./app/skills/routes'))
 // app.use(require('./app/employment-type/routes'))
