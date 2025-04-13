@@ -120,7 +120,7 @@ router.get(
 ); // Получить заказ по ID (доступно пользователю, если заказ его)
 router.post(
   "/api/store/orders",
-//   passport.authenticate("jwt", { session: false }),
+  passport.authenticate("jwt", { session: false }),
   createOrder
 ); // Создать заказ (доступно аутентифицированным пользователям)
 router.put(

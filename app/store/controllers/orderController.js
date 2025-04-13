@@ -111,6 +111,7 @@ exports.createOrder = async (req, res) => {
       return res.status(404).json({ message: 'Пользователь не найден' });
     }
 
+    // Проверяем наличие личных данных пользователя
     if (!user.username || !user.address || !user.phone) {
       return res.status(400).json({
         message: 'Необходимы username, address и phone. Пожалуйста, заполните профиль.',
