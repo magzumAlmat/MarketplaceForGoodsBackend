@@ -1,7 +1,6 @@
 // src/models/ProductCategory.js
 'use strict';
-const { Model } = require('sequelize');
-
+const sequelize = require("../../../config/db");
 module.exports = (sequelize, DataTypes) => {
   class ProductCategory extends Model {
     static associate(models) {

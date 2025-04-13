@@ -1,5 +1,5 @@
-const Sequelize = require('sequelize');
-const sequelize = require('../../../config/db');
+
+const sequelize = require("../../../config/db");
 const Product = require('./Product');
 const ProductImage = require('./ProductImage');
 
@@ -9,7 +9,7 @@ ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 module.exports = {
   sequelize,
-  Sequelize,
+
   Product,
   ProductImage,
 };

@@ -1,35 +1,36 @@
 // src/models/ProductImage.js
-'use strict';
-const { Model } = require('sequelize');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../../../config/db');
 
-module.exports = (sequelize, DataTypes) => {
-  class ProductImage extends Model {
-    static associate(models) {
-      ProductImage.belongsTo(models.Product, { foreignKey: 'productId' });
-    }
-  }
-  ProductImage.init(
-    {
-      productId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: { model: 'products', key: 'id' },
-      },
-      imagePath: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      isPrimary: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
+const ProductImage = sequelize.define('ProductImage', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  productId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'products',
+      key: 'id',
     },
-    {
-      sequelize,
-      modelName: 'ProductImage',
-      tableName: 'product_images',
-    }
-  );
-  return ProductImage;
-};
+  },
+  imagePath: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+    },
+  },
+  isPrimary: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  },
+}, {
+  timestamps: true,
+  tableName: 'product_images',
+});
+
+module.exports = ProductImage;
