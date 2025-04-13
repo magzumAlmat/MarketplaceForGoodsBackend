@@ -1,8 +1,10 @@
 // src/controllers/productController.js
-const { Product, ProductImage, ProductCategory, Category } = require('../models');
+const { ProductImage, ProductCategory, Category } = require('../models');
+const Product = require('../models/Product')
 const { Op } = require('sequelize');
 
 exports.getAllProducts = async (req, res) => {
+  console.log('getAllProducts started')
   try {
     const products = await Product.findAll({
       include: [
@@ -10,6 +12,7 @@ exports.getAllProducts = async (req, res) => {
         { model: Category, as: 'categories', through: { attributes: [] } },
       ],
     });
+    console.log(products)
     return res.status(200).json(products);
   } catch (error) {
     return res.status(500).json({ message: 'Ошибка при получении продуктов', error: error.message });
@@ -36,40 +39,59 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, volume, description, features, price, stock, categoryIds } = req.body;
+    const { title, description, price, categoryId, categoryIds } = req.body;
+
+    // console.log('req body=', { title, price, categoryId, categoryIds });
 
     // Валидация входных данных
-    if (!name || !price || !stock) {
-      return res.status(400).json({ message: 'Необходимы name, price и stock' });
+    if (!title || !price || !categoryId) {
+      return res.status(400).json({ message: 'Необходимы title, price и categoryId' });
+    }
+
+    // Проверяем существование categoryId
+    const categoryExists = await Category.findByPk(categoryId);
+    if (!categoryExists) {
+      return res.status(400).json({ message: `Категория с ID ${categoryId} не существует` });
     }
 
     // Создаём продукт
     const product = await Product.create({
-      name,
-      volume,
+      title,
       description,
-      features,
       price: parseFloat(price),
-      stock: parseInt(stock),
+      categoryId: parseInt(categoryId),
     });
+
+    console.log('product', product);
 
     // Обрабатываем изображения
     if (req.files && req.files.length > 0) {
       const images = req.files.map((file, index) => ({
         productId: product.id,
-        imagePath: `/uploads/${file.filename}`,
-        isPrimary: index === 0, // Первое изображение — основное
+        imagePath: `/Uploads/${file.filename}`,
+        isPrimary: index === 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
       await ProductImage.bulkCreate(images);
     }
 
-    // Связываем с категориями
+    // Связываем с категориями (many-to-many)
     if (categoryIds && Array.isArray(categoryIds)) {
-      const productCategories = categoryIds.map((categoryId) => ({
+      const invalidCategories = [];
+      for (const catId of categoryIds) {
+        const catExists = await Category.findByPk(catId);
+        if (!catExists) {
+          invalidCategories.push(catId);
+        }
+      }
+      if (invalidCategories.length > 0) {
+        return res.status(400).json({ message: `Категории с ID ${invalidCategories.join(', ')} не существуют` });
+      }
+
+      const productCategories = categoryIds.map((catId) => ({
         productId: product.id,
-        categoryId: parseInt(categoryId),
+        categoryId: parseInt(catId),
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
@@ -93,7 +115,9 @@ exports.createProduct = async (req, res) => {
 exports.editProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, volume, description, features, price, stock, categoryIds } = req.body;
+    const { title, volume, description, features, price, stock, categoryId, categoryIds } = req.body;
+
+    console.log('req body=', { title, price, stock, categoryId, categoryIds });
 
     const product = await Product.findByPk(id);
     if (!product) {
@@ -102,22 +126,21 @@ exports.editProduct = async (req, res) => {
 
     // Обновляем данные продукта
     await product.update({
-      name: name || product.name,
+      title: title || product.title,
       volume: volume !== undefined ? volume : product.volume,
       description: description !== undefined ? description : product.description,
       features: features !== undefined ? features : product.features,
       price: price ? parseFloat(price) : product.price,
       stock: stock ? parseInt(stock) : product.stock,
+      categoryId: categoryId ? parseInt(categoryId) : product.categoryId,
     });
 
-    // Обновляем изображения, если загружены новые
+    // Обновляем изображения
     if (req.files && req.files.length > 0) {
-      // Удаляем старые изображения
       await ProductImage.destroy({ where: { productId: id } });
-      // Добавляем новые
       const images = req.files.map((file, index) => ({
         productId: id,
-        imagePath: `/uploads/${file.filename}`,
+        imagePath: `/Uploads/${file.filename}`,
         isPrimary: index === 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -127,19 +150,17 @@ exports.editProduct = async (req, res) => {
 
     // Обновляем категории
     if (categoryIds && Array.isArray(categoryIds)) {
-      // Удаляем старые связи
       await ProductCategory.destroy({ where: { productId: id } });
-      // Добавляем новые
-      const productCategories = categoryIds.map((categoryId) => ({
+      const productCategories = categoryIds.map((catId) => ({
         productId: id,
-        categoryId: parseInt(categoryId),
+        categoryId: parseInt(catId),
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
       await ProductCategory.bulkCreate(productCategories);
     }
 
-    // Возвращаем обновлённый продукт
+    // Возвращаем продукт
     const updatedProduct = await Product.findByPk(id, {
       include: [
         { model: ProductImage, as: 'images' },

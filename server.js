@@ -23,9 +23,9 @@ app.use(express.static(__dirname));
 
 
 
-// app.get('/',(req,res)=>{
-//     res.send('OK!')
-// })
+app.get('/',(req,res)=>{
+    res.send('OK!')
+})
 
 // app.post('/api',(req,res)=>{
 //     console.log(req.body)
