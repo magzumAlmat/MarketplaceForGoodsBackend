@@ -15,20 +15,67 @@ POST /api/store/login
   "password": "password123"
 }
 
-# Create Product
-POST /api/store/products
+# Select Product
+GET /api/store/products/1
+# This request retrieves the details of a specific product by its ID.
+
+# Add Product to Cart
+POST /cart
 {
-  "title": "Sample Product",
-  "price": 19.99,
-  "description": "This is a sample product description.",
-  "categoryId": 1,
-  "stockQuantity": 100,
-  "isAvailable": true
+  "productId": 1,
+  "quantity": 1
+}
+# This request adds a product to the user's cart. The product ID and quantity are specified in the request body.
+
+# View Cart
+GET /cart
+# This request retrieves the current contents of the user's cart.
+
+# Update Cart Item Quantity
+PUT /cart
+{
+  "productId": 1,
+  "quantity": 2
+}
+# This request updates the quantity of a specific product in the user's cart. The product ID and new quantity are specified in the request body.
+
+# Remove Product from Cart
+DELETE /cart
+{
+  "productId": 1
+}
+# This request removes a specific product from the user's cart. The product ID is specified in the request body.
+
+# Create Order
+POST /api/store/orders
+{
+  "username": "username",
+  "address": "123 Main St",
+  "phone": "123-456-7890"
+}
+# This request creates a new order. The user's personal details (username, address, and phone) are specified in the request body.
+
+# User Login
+POST /api/store/login
+{
+  "email": "user@example.com",
+  "password": "password123"
 }
 
-# Add Product to Category
-POST /api/store/categories/1/products
+# Select Product
+GET /api/store/products/1
+
+# Add Product to Cart
+POST /cart
 {
+  "productId": 1,
+  "quantity": 1
+}
+
+# View Cart
+GET /cart
+
+# Update Cart Item Quantity
   "productId": 1
 }
 

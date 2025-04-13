@@ -25,6 +25,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      stockQuantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      isAvailable: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,

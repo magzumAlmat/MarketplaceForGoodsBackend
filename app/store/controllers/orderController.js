@@ -74,9 +74,13 @@ exports.getOrderById = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    console.log('req.user=', req.user);
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: 'Пользователь не аутентифицирован' });
+    const { username, address, phone } = req.body;
+
+    // Проверяем наличие личных данных пользователя
+    if (!username || !address || !phone) {
+      return res.status(400).json({
+        message: 'Необходимы username, address и phone. Пожалуйста, заполните профиль.',
+      });
     }
 
     // Получаем корзину
@@ -105,29 +109,15 @@ exports.createOrder = async (req, res) => {
       return sum + parseFloat(product.price) * item.quantity;
     }, 0);
 
-    // Получаем данные пользователя
-    const user = await User.findByPk(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-
-    // Проверяем наличие личных данных пользователя
-    if (!user.username || !user.address || !user.phone) {
-      return res.status(400).json({
-        message: 'Необходимы username, address и phone. Пожалуйста, заполните профиль.',
-        redirect: '/profile', // Подсказка для фронтенда
-      });
-    }
-
     // Формируем product_ids
     const formattedProductIds = productIds.map(id => [id]);
 
     // Создаём заказ
     const order = await Order.create({
       product_ids: formattedProductIds,
-      username: user.username,
-      address: user.address,
-      phone: user.phone,
+      username,
+      address,
+      phone,
       status: 'pending',
       totalPrice,
       userId: req.user.id,
