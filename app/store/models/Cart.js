@@ -20,6 +20,16 @@ const Cart = sequelize.define('Cart', {
     allowNull: false,
     defaultValue: 1,
   },
+  totalPrice: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0.0,
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'active',
+  },
 }, {
   tableName: 'carts',
   timestamps: true,

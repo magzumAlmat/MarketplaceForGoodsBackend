@@ -29,9 +29,9 @@ const {
 
 const { doLogin } = require("../controllers/authController");
 const cartController = require('../controllers/cartController');
-
+const orderController=require('../controllers/orderController')
 const userController = require('../controllers/userController');
-
+const categoryController=require('../controllers/categoryController')
 const authMiddleware = require('../middleware/authMiddleware');
 // Middleware для проверки роли администратора (пример, реализуй в зависимости от твоей логики)
 const isAdmin = (req, res, next) => {
@@ -79,6 +79,20 @@ router.post(
 //   isAdmin,
   createCategory
 ); // Создать категорию (только админ)
+
+router.post(
+  "/api/store/categories/:categoryId/products",
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
+  categoryController.addProductToCategory
+); // Добавить продукт в категорию (только админ)
+
+router.delete(
+  "/api/store/categories/:categoryId/products",
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
+  categoryController.removeProductFromCategory
+); // Удалить продукт из категории (только админ)
 router.put(
   "/api/store/categories/:id",
 //   passport.authenticate("jwt", { session: false }),
@@ -122,12 +136,20 @@ router.delete(
   deleteOrderById
 ); // Удалить заказ (только админ)
 
+router.put(
+  "/api/store/orders/:id/status",
+//   passport.authenticate("jwt", { session: false }),
+//   isAdmin,
+  orderController.updateOrderStatus
+); // Обновить статус заказа (только админ)
+
 
 
 
 
 router.post('/cart', authMiddleware, cartController.addToCart);
 router.get('/cart', authMiddleware, cartController.getCart);
+router.put('/cart', authMiddleware, cartController.updateCartItemQuantity);
 router.delete('/cart', authMiddleware, cartController.removeFromCart);
 
 router.get('/profile', authMiddleware, userController.getUserProfile);

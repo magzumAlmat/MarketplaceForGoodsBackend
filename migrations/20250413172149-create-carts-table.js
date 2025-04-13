@@ -12,10 +12,14 @@ module.exports = {
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: { model: 'users', key: 'id' },
+        onDelete: 'CASCADE',
       },
       productId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: { model: 'products', key: 'id' },
+        onDelete: 'CASCADE',
       },
       quantity: {
         type: Sequelize.INTEGER,

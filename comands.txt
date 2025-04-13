@@ -1,41 +1,66 @@
-// команда для первого запуска контейнера 
-docker-compose up --build 
-// команда для последующего запуска docker-compose 
-docker-compose up
+# User Registration
+POST /api/store/register
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "username": "username",
+  "address": "123 Main St",
+  "phone": "123-456-7890"
+}
 
-// установка sequelize с доп библиотеками ( драйвер PostgreSQL (pg), и дополнительный модуль (pg-hstore), который используется для хранения данных в формате hstore.)
-npm install sequelize pg pg-hstore
+# User Login
+POST /api/store/login
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
 
-//дополнительный пакет Sequelize CLI, который предоставляет команды для создания и выполнения миграций.
-npm install sequelize-cli
+# Create Product
+POST /api/store/products
+{
+  "title": "Sample Product",
+  "price": 19.99,
+  "description": "This is a sample product description.",
+  "categoryId": 1,
+  "stockQuantity": 100,
+  "isAvailable": true
+}
 
-// создание миграции для модели
-npx sequelize-cli migration:generate --name <имя_миграции>
+# Add Product to Category
+POST /api/store/categories/1/products
+{
+  "productId": 1
+}
 
-// запускает файлы миграции для того чтобы они появились в db
-npx sequelize-cli db:migrate
+# Create Order
+POST /api/store/orders
+{
+  "productIds": [1],
+  "username": "username",
+  "address": "123 Main St",
+  "phone": "123-456-7890",
+  "status": "pending"
+}
 
-// для создания файла seed
-npx sequelize-cli seed:generate --name <SeederName>
+# Update Order Status
+PUT /api/store/orders/1/status
+{
+  "status": "shipped"
+}
 
+# Update Cart Item Quantity
+PUT /cart
+{
+  "productId": 1,
+  "quantity": 2
+}
 
-// для запуска seed
-npx sequelize-cli db:seed --seed <seed-file-name>
+# Remove Product from Category
+DELETE /api/store/categories/1/products
+{
+  "productId": 1
+}
 
-
-
-запуск на серваке
-
-NODE_ENV=production npx sequelize db:migrate
-
-NODE_ENV=production npx sequelize db:seed:all
-
-
-Запуск daemon
-npm i pm2 -g
-
-pm2 start "npm run prod" --name hh.kz
-
-npx sequelize-cli db:migrate:undo:all
-npx sequelize-cli db:migrate
-npx sequelize-cli db:seed --seed seedproduct.js
+# Delete Order
+DELETE /api/store/orders/1
+{}

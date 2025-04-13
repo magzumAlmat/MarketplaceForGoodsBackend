@@ -58,6 +58,54 @@ exports.editCategory = async (req, res) => {
   }
 };
 
+exports.addProductToCategory = async (req, res) => {
+  try {
+    const { categoryId, productId } = req.body;
+    if (!categoryId || !productId) {
+      return res.status(400).json({ message: 'Необходимы categoryId и productId' });
+    }
+
+    const category = await Category.findByPk(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: 'Категория не найдена' });
+    }
+
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Продукт не найден' });
+    }
+
+    await category.addProduct(product);
+    return res.status(200).json({ message: 'Продукт добавлен в категорию' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Ошибка при добавлении продукта в категорию', error: error.message });
+  }
+};
+
+exports.removeProductFromCategory = async (req, res) => {
+  try {
+    const { categoryId, productId } = req.body;
+    if (!categoryId || !productId) {
+      return res.status(400).json({ message: 'Необходимы categoryId и productId' });
+    }
+
+    const category = await Category.findByPk(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: 'Категория не найдена' });
+    }
+
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Продукт не найден' });
+    }
+
+    await category.removeProduct(product);
+    return res.status(200).json({ message: 'Продукт удалён из категории' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Ошибка при удалении продукта из категории', error: error.message });
+  }
+};
+
 exports.deleteCategoryById = async (req, res) => {
   try {
     const { id } = req.params;

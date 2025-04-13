@@ -55,6 +55,34 @@ exports.getCart = async (req, res) => {
   }
 };
 
+exports.updateCartItemQuantity = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Пользователь не аутентифицирован' });
+    }
+
+    const { productId, quantity } = req.body;
+    if (!productId || quantity < 1) {
+      return res.status(400).json({ message: 'Необходим productId и quantity >= 1' });
+    }
+
+    const cartItem = await Cart.findOne({
+      where: { userId: req.user.id, productId },
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({ message: 'Товар не найден в корзине' });
+    }
+
+    cartItem.quantity = quantity;
+    await cartItem.save();
+
+    return res.status(200).json(cartItem);
+  } catch (error) {
+    return res.status(500).json({ message: 'Ошибка при обновлении количества товара в корзине', error: error.message });
+  }
+};
+
 exports.removeFromCart = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {

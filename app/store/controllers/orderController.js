@@ -184,6 +184,28 @@ exports.editOrder = async (req, res) => {
   }
 };
 
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: 'Необходимо указать статус' });
+    }
+
+    const order = await Order.findByPk(id);
+    if (!order) {
+      return res.status(404).json({ message: 'Заказ не найден' });
+    }
+
+    await order.update({ status });
+
+    return res.status(200).json(order);
+  } catch (error) {
+    return res.status(500).json({ message: 'Ошибка при обновлении статуса заказа', error: error.message });
+  }
+};
+
 exports.deleteOrderById = async (req, res) => {
   try {
     const { id } = req.params;

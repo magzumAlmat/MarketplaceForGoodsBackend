@@ -33,6 +33,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  preferences: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  lastLogin: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'users',
   timestamps: true,

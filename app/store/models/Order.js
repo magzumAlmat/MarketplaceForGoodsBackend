@@ -36,6 +36,14 @@ const Order = sequelize.define('Order', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  paymentMethod: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  orderNotes: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
 }, {
   tableName: 'orders',
   timestamps: true,
