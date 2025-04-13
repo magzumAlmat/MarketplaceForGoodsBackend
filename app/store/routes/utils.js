@@ -1,24 +1,15 @@
-const multer = require('multer')
+// src/routes/utils.js
+const multer = require('multer');
+const path = require('path');
 
 const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
-    destination: function (req, file, cb) {
-
-        cb(null, './public/cable/');
-    },
-    filename: function (req, file, cb) {
-        console.log('in utils', file)
-        let ext = file.originalname.split('.');
-        ext = ext[ext.length - 1];
-        const filename = "_" + Date.now() + "." + ext;
-        cb(null, filename);
-    }
-})
-
-
-
-const upload = multer({storage})
-
-module.exports = {
-    upload
-}
+const upload = multer({ storage });
+module.exports = { upload };

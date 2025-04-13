@@ -1,24 +1,31 @@
 // src/models/Category.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+'use strict';
+const { Model } = require('sequelize');
 
-const Category = sequelize.define('Category', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      notEmpty: true,
+module.exports = (sequelize, DataTypes) => {
+  class Category extends Model {
+    static associate(models) {
+      Category.belongsToMany(models.Product, {
+        through: models.ProductCategory,
+        foreignKey: 'categoryId',
+        otherKey: 'productId',
+        as: 'products',
+      });
+    }
+  }
+  Category.init(
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
     },
-  },
-}, {
-  timestamps: true,
-  tableName: 'categories',
-});
-
-module.exports = Category;
+    {
+      sequelize,
+      modelName: 'Category',
+      tableName: 'categories',
+    }
+  );
+  return Category;
+};

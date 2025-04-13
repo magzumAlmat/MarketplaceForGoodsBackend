@@ -1,32 +1,49 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../../../config/db')
+// src/models/Order.js
+'use strict';
+const { Model } = require('sequelize');
 
-const Order = sequelize.define('Order', {
-
-    product_ids: {
+module.exports = (sequelize, DataTypes) => {
+  class Order extends Model {
+    static associate(models) {
+      // Если нужна связь с пользователем, добавь belongsTo
+    }
+  }
+  Order.init(
+    {
+      product_ids: {
         type: DataTypes.ARRAY(DataTypes.ARRAY(DataTypes.INTEGER)),
         allowNull: true,
-    },
-    username: {
+      },
+      username: {
         type: DataTypes.STRING,
         allowNull: false,
-    },
-    address: {
+      },
+      address: {
         type: DataTypes.TEXT,
         allowNull: false,
-    },
-    phone: {
+      },
+      phone: {
         type: DataTypes.STRING,
         allowNull: false,
-    },
-    status: {
+      },
+      status: {
         type: DataTypes.STRING,
-        allowNull: false
-    },
-    totalPrice: {
+        allowNull: false,
+      },
+      totalPrice: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
+      userId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false, // Предполагаем связь с пользователем
+      },
     },
-});
-
-module.exports = Order;
+    {
+      sequelize,
+      modelName: 'Order',
+      tableName: 'Orders',
+    }
+  );
+  return Order;
+};

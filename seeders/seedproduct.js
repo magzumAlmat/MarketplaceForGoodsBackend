@@ -1,36 +1,64 @@
-const Product = require('../app/store/models/Product')
-const img_cable = '/public/cable/img_cable.png';
-const vvg = '/public/cable/img_cable.png';
-const img_cross = '/public/cable/cros_optical.png';
-const image_def = '/public/cable/cros_optical.png';
-const image_patch1 = '/public/cable/cros_optical.png';
-const image_patch2 = '/public/cable/cros_optical.png';
+// src/seeders/seedproduct.js
+const { Op } = require('sequelize');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // 1. Создаём категории
-    const categories = [
-      { name: 'Купание', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Уход', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Защита', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Средства для мамы', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Органическая линейка', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Другое', createdAt: new Date(), updatedAt: new Date() },
+    // 1. Проверяем и создаём категории
+    const categoryNames = [
+      'Купание',
+      'Уход',
+      'Защита',
+      'Средства для мамы',
+      'Органическая линейка',
+      'Другое',
     ];
 
-    await queryInterface.bulkInsert('categories', categories, {});
+    // Проверяем, существуют ли категории
+    const existingCategories = await queryInterface.sequelize.query(
+      `SELECT id, name FROM categories WHERE name IN (:names)`,
+      {
+        replacements: { names: categoryNames },
+        type: queryInterface.sequelize.QueryTypes.SELECT,
+      }
+    );
 
-    // Маппинг категорий для удобства (предполагаем, что ID начинаются с 1)
-    const categoryMap = {
-      'Купание': 1,
-      'Уход': 2,
-      'Защита': 3,
-      'Средства для мамы': 4,
-      'Органическая линейка': 5,
-      'Другое': 6,
-    };
+    const categoryMap = {};
+    existingCategories.forEach((cat) => {
+      categoryMap[cat.name] = cat.id;
+    });
 
-    // 2. Создаём товары
+    // Вставляем только отсутствующие категории
+    const categoriesToInsert = categoryNames
+      .filter((name) => !categoryMap[name])
+      .map((name) => ({
+        name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+    if (categoriesToInsert.length > 0) {
+      await queryInterface.bulkInsert('categories', categoriesToInsert, {});
+    }
+
+    // Обновляем categoryMap после вставки новых категорий
+    const allCategories = await queryInterface.sequelize.query(
+      `SELECT id, name FROM categories WHERE name IN (:names)`,
+      {
+        replacements: { names: categoryNames },
+        type: queryInterface.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    allCategories.forEach((cat) => {
+      categoryMap[cat.name] = cat.id;
+    });
+
+    // 2. Очищаем таблицы перед вставкой
+    await queryInterface.bulkDelete('product_categories', null, {});
+    await queryInterface.bulkDelete('product_images', null, {});
+    await queryInterface.bulkDelete('products', null, {});
+
+    // 3. Создаём товары
     const products = [
       {
         name: 'Гель для тела и волос 2 в 1',
@@ -39,7 +67,6 @@ module.exports = {
         features: '97% натуральных ингредиентов, устраняет дискомфорт и стянутость.',
         price: 10.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -50,7 +77,6 @@ module.exports = {
         features: '96% натуральных ингредиентов, уменьшает чувство стянутости сухой или хрупкой кожи.',
         price: 12.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -61,7 +87,6 @@ module.exports = {
         features: '96% натуральных ингредиентов, бессульфатный.',
         price: 9.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -72,7 +97,6 @@ module.exports = {
         features: '100% растительных ингредиентов в очищающей основе, кремовая текстура.',
         price: 5.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -83,7 +107,6 @@ module.exports = {
         features: '99% натуральных ингредиентов, обогащён органическим алоэ вера, сертифицирован ECOCERT.',
         price: 15.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -94,7 +117,6 @@ module.exports = {
         features: 'Расслабляющий эффект.',
         price: 8.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -105,7 +127,6 @@ module.exports = {
         features: '97% натуральных ингредиентов, содержит овёс.',
         price: 11.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -116,7 +137,6 @@ module.exports = {
         features: '97% натуральных ингредиентов, устраняет дискомфорт и стянутость.',
         price: 14.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -127,7 +147,6 @@ module.exports = {
         features: 'Протестировано под дерматологическим и педиатрическим контролем.',
         price: 16.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -138,7 +157,6 @@ module.exports = {
         features: 'Разработан специально для атопической кожи.',
         price: 13.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -149,7 +167,6 @@ module.exports = {
         features: '98% натуральных ингредиентов.',
         price: 12.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -160,7 +177,6 @@ module.exports = {
         features: '99% натуральных ингредиентов, обогащён органическим алоэ вера, цветочный аромат, ECOCERT.',
         price: 14.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -171,7 +187,6 @@ module.exports = {
         features: 'Интенсивное питание кожи.',
         price: 9.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -182,7 +197,6 @@ module.exports = {
         features: 'Органический, успокаивающий эффект, ECOCERT.',
         price: 11.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -193,7 +207,6 @@ module.exports = {
         features: 'Органический состав, сертифицирован ECOCERT.',
         price: 7.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -204,7 +217,6 @@ module.exports = {
         features: 'Разработан для атопической кожи.',
         price: 15.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -215,7 +227,6 @@ module.exports = {
         features: 'Нежная текстура.',
         price: 13.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -226,7 +237,6 @@ module.exports = {
         features: 'Расслабляющий эффект.',
         price: 8.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -237,7 +247,6 @@ module.exports = {
         features: '100% натуральная формула с французской термальной водой, успокаивающие свойства.',
         price: 10.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -248,7 +257,6 @@ module.exports = {
         features: '97% натуральных ингредиентов, длительное увлажнение.',
         price: 16.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -259,7 +267,6 @@ module.exports = {
         features: 'Снижает чувство стянутости кожи.',
         price: 9.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -270,7 +277,6 @@ module.exports = {
         features: 'Профилактика раздражений.',
         price: 7.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -281,7 +287,6 @@ module.exports = {
         features: 'Клинически протестировано под наблюдением врача.',
         price: 8.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -292,7 +297,6 @@ module.exports = {
         features: 'Нежирная текстура, эффект через 2 дня использования.',
         price: 10.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -303,7 +307,6 @@ module.exports = {
         features: '99% натуральных ингредиентов, обогащён органическим алоэ вера и маслом сладкого миндаля, ECOCERT.',
         price: 12.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -314,7 +317,6 @@ module.exports = {
         features: 'Высокая защита SPF 50, экологичный состав.',
         price: 14.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -325,7 +327,6 @@ module.exports = {
         features: '98% натуральных ингредиентов.',
         price: 9.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -336,7 +337,6 @@ module.exports = {
         features: 'Содержит порошок овса, рисовый и кукурузный крахмалы.',
         price: 6.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -347,7 +347,6 @@ module.exports = {
         features: 'Поддержка грудного вскармливания, заживляющий эффект.',
         price: 11.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -358,7 +357,6 @@ module.exports = {
         features: 'Профилактика растяжек, содержит масло арганы.',
         price: 13.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -369,7 +367,6 @@ module.exports = {
         features: 'Мягкое очищение, увлажнение.',
         price: 10.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -380,7 +377,6 @@ module.exports = {
         features: 'Мягкое очищение, поддержание баланса кожи.',
         price: 4.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -391,7 +387,6 @@ module.exports = {
         features: 'Подходят для новорожденных, очищение зоны под подгузником.',
         price: 5.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -402,7 +397,6 @@ module.exports = {
         features: 'Удаление жира, дезинфицирующий эффект.',
         price: 7.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -413,7 +407,6 @@ module.exports = {
         features: 'Экологичный состав, гипоаллергенная формула.',
         price: 9.99,
         stock: 100,
-        image: image_def,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -421,55 +414,106 @@ module.exports = {
 
     await queryInterface.bulkInsert('products', products, {});
 
-    // 3. Создаём связи товаров с категориями
+    // 4. Создаём изображения для товаров
+    const productImages = products.map((product, index) => [
+      {
+        productId: index + 1,
+        imagePath: `/public/products/product_${index + 1}_primary.png`,
+        isPrimary: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        productId: index + 1,
+        imagePath: `/public/products/product_${index + 1}_secondary.png`,
+        isPrimary: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]).flat();
+
+    await queryInterface.bulkInsert('product_images', productImages, {});
+
+    // 5. Создаём связи товаров с категориями
     const productCategories = [
-      { productId: 1, categoryId: categoryMap['Купание'] }, // Гель для тела и волос 2 в 1
-      { productId: 2, categoryId: categoryMap['Купание'] }, // Основа моющая для лица и тела
-      { productId: 3, categoryId: categoryMap['Купание'] }, // Шампунь для младенцев
-      { productId: 4, categoryId: categoryMap['Купание'] }, // Мыло туалетное детское
-      { productId: 5, categoryId: categoryMap['Купание'] }, // Гель-душ для тела и волос органический
-      { productId: 5, categoryId: categoryMap['Органическая линейка'] },
-      { productId: 6, categoryId: categoryMap['Купание'] }, // Детское масло для ванны Расслабляющее
-      { productId: 7, categoryId: categoryMap['Купание'] }, // Детский шампунь для смягчения себорейных корочек
-      { productId: 8, categoryId: categoryMap['Купание'] }, // BIOLANE TOPILANE Детское очищающее масло
-      { productId: 9, categoryId: categoryMap['Купание'] }, // BIOLANE TOPILANE Детский очищающий крем
-      { productId: 10, categoryId: categoryMap['Купание'] }, // Гель для тела и волос 2в1 для атопии
-      { productId: 11, categoryId: categoryMap['Уход'] }, // Питательный увлажняющий крем
-      { productId: 12, categoryId: categoryMap['Уход'] }, // Органический увлажняющий крем
-      { productId: 12, categoryId: categoryMap['Органическая линейка'] },
-      { productId: 13, categoryId: categoryMap['Уход'] }, // Миндальное масло
-      { productId: 14, categoryId: categoryMap['Уход'] }, // Органический бальзам Cicabébé
-      { productId: 14, categoryId: categoryMap['Органическая линейка'] },
-      { productId: 15, categoryId: categoryMap['Уход'] }, // Органический гель с Арникой
-      { productId: 15, categoryId: categoryMap['Органическая линейка'] },
-      { productId: 16, categoryId: categoryMap['Уход'] }, // Крем для атопии
-      { productId: 17, categoryId: categoryMap['Уход'] }, // Увлажняющее молочко
-      { productId: 18, categoryId: categoryMap['Уход'] }, // Масло для массажа
-      { productId: 19, categoryId: categoryMap['Уход'] }, // Детская термальная вода
-      { productId: 20, categoryId: categoryMap['Уход'] }, // BIOLANE TOPILANE Бальзам для тела
-      { productId: 21, categoryId: categoryMap['Уход'] }, // BIOLANE TOPILANE Крем для лица
-      { productId: 22, categoryId: categoryMap['Защита'] }, // Жидкий тальк
-      { productId: 23, categoryId: categoryMap['Защита'] }, // Крем защитный для подгузников
-      { productId: 24, categoryId: categoryMap['Защита'] }, // Крем Eryderm
-      { productId: 25, categoryId: categoryMap['Защита'] }, // Органический крем под подгузник
-      { productId: 25, categoryId: categoryMap['Органическая линейка'] },
-      { productId: 26, categoryId: categoryMap['Защита'] }, // Солнцезащитный крем SPF 50
-      { productId: 27, categoryId: categoryMap['Защита'] }, // Молочко после загара
-      { productId: 28, categoryId: categoryMap['Защита'] }, // BIOLANE Детская присыпка
-      { productId: 29, categoryId: categoryMap['Средства для мамы'] }, // Бальзам для сосков
-      { productId: 30, categoryId: categoryMap['Средства для мамы'] }, // Крем от растяжек
-      { productId: 31, categoryId: categoryMap['Средства для мамы'] }, // Гель для интимной гигиены
-      { productId: 32, categoryId: categoryMap['Другое'] }, // Салфетки (влажная туалетная бумага)
-      { productId: 33, categoryId: categoryMap['Другое'] }, // Салфетки очищающие Н2О
-      { productId: 34, categoryId: categoryMap['Другое'] }, // Жидкость для мытья посуды
-      { productId: 35, categoryId: categoryMap['Другое'] }, // Жидкость для стирки белья
+      { productId: 1, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 2, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 3, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 4, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 5, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 5, categoryId: categoryMap['Органическая линейка'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 6, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 7, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 8, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 9, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 10, categoryId: categoryMap['Купание'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 11, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 12, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 12, categoryId: categoryMap['Органическая линейка'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 13, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 14, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 14, categoryId: categoryMap['Органическая линейка'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 15, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 15, categoryId: categoryMap['Органическая линейка'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 16, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 17, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 18, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 19, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 20, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 21, categoryId: categoryMap['Уход'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 22, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 23, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 24, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 25, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 25, categoryId: categoryMap['Органическая линейка'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 26, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 27, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 28, categoryId: categoryMap['Защита'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 29, categoryId: categoryMap['Средства для мамы'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 30, categoryId: categoryMap['Средства для мамы'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 31, categoryId: categoryMap['Средства для мамы'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 32, categoryId: categoryMap['Другое'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 33, categoryId: categoryMap['Другое'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 34, categoryId: categoryMap['Другое'], createdAt: new Date(), updatedAt: new Date() },
+      { productId: 35, categoryId: categoryMap['Другое'], createdAt: new Date(), updatedAt: new Date() },
     ];
 
     await queryInterface.bulkInsert('product_categories', productCategories, {});
+
+    // 6. Опционально: Создаём тестовые заказы (раскомментируй, если нужно)
+    /*
+    const orders = [
+      {
+        product_ids: [[1], [2]], // Пример: заказ включает товары с ID 1 и 2
+        username: 'Иван Иванов',
+        address: 'Москва, ул. Ленина, д. 10',
+        phone: '+79991234567',
+        status: 'pending',
+        totalPrice: 23.98, // 10.99 + 12.99
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        product_ids: [[3]], // Заказ включает товар с ID 3
+        username: 'Мария Петрова',
+        address: 'Санкт-Петербург, ул. Мира, д. 5',
+        phone: '+79997654321',
+        status: 'completed',
+        totalPrice: 9.99,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    await queryInterface.bulkInsert('Orders', orders, {});
+    */
   },
 
   down: async (queryInterface, Sequelize) => {
+    // Очищаем таблицы в обратном порядке зависимостей
+    // await queryInterface.bulkDelete('Orders', null, {});
     await queryInterface.bulkDelete('product_categories', null, {});
+    await queryInterface.bulkDelete('product_images', null, {});
     await queryInterface.bulkDelete('products', null, {});
     await queryInterface.bulkDelete('categories', null, {});
   },

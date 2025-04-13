@@ -1,32 +1,32 @@
 // src/models/ProductCategory.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+'use strict';
+const { Model } = require('sequelize');
 
-const ProductCategory = sequelize.define('ProductCategory', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  productId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'products',
-      key: 'id',
+module.exports = (sequelize, DataTypes) => {
+  class ProductCategory extends Model {
+    static associate(models) {
+      ProductCategory.belongsTo(models.Product, { foreignKey: 'productId' });
+      ProductCategory.belongsTo(models.Category, { foreignKey: 'categoryId' });
+    }
+  }
+  ProductCategory.init(
+    {
+      productId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: { model: 'products', key: 'id' },
+      },
+      categoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: { model: 'categories', key: 'id' },
+      },
     },
-  },
-  categoryId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'categories',
-      key: 'id',
-    },
-  },
-}, {
-  timestamps: false,
-  tableName: 'product_categories',
-});
-
-module.exports = ProductCategory;
+    {
+      sequelize,
+      modelName: 'ProductCategory',
+      tableName: 'product_categories',
+    }
+  );
+  return ProductCategory;
+};
