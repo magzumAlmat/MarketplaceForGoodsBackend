@@ -33,6 +33,7 @@ const orderController=require('../controllers/orderController')
 const userController = require('../controllers/userController');
 const categoryController=require('../controllers/categoryController')
 const authMiddleware = require('../middleware/authMiddleware');
+
 // Middleware для проверки роли администратора (пример, реализуй в зависимости от твоей логики)
 const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
@@ -45,7 +46,7 @@ const isAdmin = (req, res, next) => {
 
 // Аутентификация
 router.post("/api/store/login", doLogin);
-
+router.post("/api/store/register", userController.registerUser); 
 // Продукты (Product) - CRUD
 router.get("/api/store/products", getAllProducts); // Получить все продукты (доступно всем)
 router.get("/api/store/products/:id", getProductById); // Получить продукт по ID (доступно всем)
