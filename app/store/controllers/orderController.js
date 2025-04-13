@@ -1,7 +1,8 @@
 // src/controllers/orderController.js
 const  Product  = require('../models/Product');
 const Order =require('../models/Order')
-
+const User = require('../models/User');
+const Cart = require('../models/Cart');
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.findAll();
@@ -29,45 +30,118 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
+// exports.createOrder = async (req, res) => {
+//   try {
+//     const { productIds, username, address, phone, status } = req.body;
+//     console.log('create order data= ' ,productIds, username, address, phone, status)
+//     // Валидация
+//     if (!productIds || !Array.isArray(productIds) || !username || !address || !phone) {
+//       return res.status(400).json({ message: 'Необходимы productIds, username, address и phone' });
+//     }
+
+//     // Проверяем, что продукты существуют и рассчитываем общую цену
+//     const products = await Product.findAll({
+//       where: { id: productIds },
+//     });
+//     console.log('products= ',products)
+//     if (products.length !== productIds.length) {
+//       return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
+//     }
+//     const totalPrice = products.reduce((sum, product) => sum + parseFloat(product.price), 0);
+
+//     // Формируем product_ids как массив массивов для PostgreSQL
+//     const formattedProductIds = productIds.map((id) => [id]);
+
+//     // Создаём заказ
+//     const order = await Order.create({
+//       product_ids: formattedProductIds,
+//       username,
+//       address,
+//       phone,
+//       status: status || 'pending',
+//       totalPrice,
+//       // userId: req.user.id, 
+//       userId:1
+//     });
+
+//     return res.status(201).json(order);
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Ошибка при создании заказа', error: error.message });
+//   }
+// };
+
+
+
 exports.createOrder = async (req, res) => {
   try {
-    const { productIds, username, address, phone, status } = req.body;
-    console.log('create order data= ' ,productIds, username, address, phone, status)
-    // Валидация
-    if (!productIds || !Array.isArray(productIds) || !username || !address || !phone) {
-      return res.status(400).json({ message: 'Необходимы productIds, username, address и phone' });
+    console.log('req.user=', req.user);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Пользователь не аутентифицирован' });
     }
 
-    // Проверяем, что продукты существуют и рассчитываем общую цену
+    // Получаем корзину
+    const cartItems = await Cart.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: Product, attributes: ['id', 'price'] }],
+    });
+
+    if (cartItems.length === 0) {
+      return res.status(400).json({ message: 'Корзина пуста' });
+    }
+
+    // Формируем productIds и проверяем продукты
+    const productIds = cartItems.map(item => item.productId);
     const products = await Product.findAll({
       where: { id: productIds },
     });
-    console.log('products= ',products)
+
     if (products.length !== productIds.length) {
       return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
     }
-    const totalPrice = products.reduce((sum, product) => sum + parseFloat(product.price), 0);
 
-    // Формируем product_ids как массив массивов для PostgreSQL
-    const formattedProductIds = productIds.map((id) => [id]);
+    // Рассчитываем totalPrice с учётом количества
+    const totalPrice = cartItems.reduce((sum, item) => {
+      const product = products.find(p => p.id === item.productId);
+      return sum + parseFloat(product.price) * item.quantity;
+    }, 0);
+
+    // Получаем данные пользователя
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    if (!user.username || !user.address || !user.phone) {
+      return res.status(400).json({
+        message: 'Необходимы username, address и phone. Пожалуйста, заполните профиль.',
+        redirect: '/profile', // Подсказка для фронтенда
+      });
+    }
+
+    // Формируем product_ids
+    const formattedProductIds = productIds.map(id => [id]);
 
     // Создаём заказ
     const order = await Order.create({
       product_ids: formattedProductIds,
-      username,
-      address,
-      phone,
-      status: status || 'pending',
+      username: user.username,
+      address: user.address,
+      phone: user.phone,
+      status: 'pending',
       totalPrice,
-      // userId: req.user.id, 
-      userId:1
+      userId: req.user.id,
     });
+
+    // Очищаем корзину
+    await Cart.destroy({ where: { userId: req.user.id } });
 
     return res.status(201).json(order);
   } catch (error) {
     return res.status(500).json({ message: 'Ошибка при создании заказа', error: error.message });
   }
 };
+
+
 
 exports.editOrder = async (req, res) => {
   try {

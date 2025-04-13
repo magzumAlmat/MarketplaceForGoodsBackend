@@ -28,7 +28,11 @@ const {
 } = require("../controllers/orderController");
 
 const { doLogin } = require("../controllers/authController");
+const cartController = require('../controllers/cartController');
 
+const userController = require('../controllers/userController');
+
+const authMiddleware = require('../middleware/authMiddleware');
 // Middleware для проверки роли администратора (пример, реализуй в зависимости от твоей логики)
 const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
@@ -117,5 +121,16 @@ router.delete(
 //   isAdmin,
   deleteOrderById
 ); // Удалить заказ (только админ)
+
+
+
+
+
+router.post('/cart', authMiddleware, cartController.addToCart);
+router.get('/cart', authMiddleware, cartController.getCart);
+router.delete('/cart', authMiddleware, cartController.removeFromCart);
+
+router.get('/profile', authMiddleware, userController.getUserProfile);
+router.put('/profile', authMiddleware, userController.updateUserProfile);
 
 module.exports = router;
