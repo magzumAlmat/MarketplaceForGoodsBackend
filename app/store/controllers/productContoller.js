@@ -1,189 +1,130 @@
-// src/controllers/productController.js
-const { ProductImage, ProductCategory, Category } = require('../models');
-const Product = require('../models/Product')
-const { Op } = require('sequelize');
+const { Product, Category, ProductImage } = require('../models');
 
-exports.getAllProducts = async (req, res) => {
-  console.log('getAllProducts started')
+const getAllProducts = async (req, res) => {
+  console.log('GetAllProducts started');
   try {
-    const products = await Product.findAll({
-      include: [
-        { model: ProductImage, as: 'images' },
-        { model: Category, as: 'categories', through: { attributes: [] } },
-      ],
-    });
-    console.log(products)
-    return res.status(200).json(products);
+    const products = await Product.findAll(); // Без include
+    console.log('Products fetched:', products.length);
+    res.status(200).json(products);
   } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при получении продуктов', error: error.message });
+    console.error('Error in getAllProducts:', error.message, error.stack);
+    res.status(500).json({ error: error.message });
   }
 };
 
-exports.getProductById = async (req, res) => {
+const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findByPk(id, {
       include: [
-        { model: ProductImage, as: 'images' },
-        { model: Category, as: 'categories', through: { attributes: [] } },
+        { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+        { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
       ],
     });
     if (!product) {
-      return res.status(404).json({ message: 'Продукт не найден' });
+      return res.status(404).json({ error: 'Product not found' });
     }
-    return res.status(200).json(product);
+    res.status(200).json(product);
   } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при получении продукта', error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
-exports.createProduct = async (req, res) => {
+const createProduct = async (req, res) => {
   try {
-    const { title, description, price, categoryId, categoryIds } = req.body;
-
-    // console.log('req body=', { title, price, categoryId, categoryIds });
-
-    // Валидация входных данных
-    if (!title || !price || !categoryId) {
-      return res.status(400).json({ message: 'Необходимы title, price и categoryId' });
-    }
-
-    // Проверяем существование categoryId
-    const categoryExists = await Category.findByPk(categoryId);
-    if (!categoryExists) {
-      return res.status(400).json({ message: `Категория с ID ${categoryId} не существует` });
-    }
-
-    // Создаём продукт
+    const { name, volume, description, features, price, stock, categoryIds } = req.body;
+    const parsedCategoryIds = categoryIds ? JSON.parse(categoryIds) : []; // Handle form-data string
     const product = await Product.create({
-      title,
+      name,
+      volume,
       description,
+      features,
       price: parseFloat(price),
-      categoryId: parseInt(categoryId),
+      stock: parseInt(stock) || 0,
     });
-
-    console.log('product', product);
-
-    // Обрабатываем изображения
+    if (parsedCategoryIds.length > 0) {
+      await product.setCategories(parsedCategoryIds);
+    }
     if (req.files && req.files.length > 0) {
       const images = req.files.map((file, index) => ({
         productId: product.id,
         imagePath: `/Uploads/${file.filename}`,
         isPrimary: index === 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }));
       await ProductImage.bulkCreate(images);
     }
-
-    // Связываем с категориями (many-to-many)
-    if (categoryIds && Array.isArray(categoryIds)) {
-      const invalidCategories = [];
-      for (const catId of categoryIds) {
-        const catExists = await Category.findByPk(catId);
-        if (!catExists) {
-          invalidCategories.push(catId);
-        }
-      }
-      if (invalidCategories.length > 0) {
-        return res.status(400).json({ message: `Категории с ID ${invalidCategories.join(', ')} не существуют` });
-      }
-
-      const productCategories = categoryIds.map((catId) => ({
-        productId: product.id,
-        categoryId: parseInt(catId),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
-      await ProductCategory.bulkCreate(productCategories);
-    }
-
-    // Возвращаем продукт с изображениями и категориями
     const createdProduct = await Product.findByPk(product.id, {
       include: [
-        { model: ProductImage, as: 'images' },
-        { model: Category, as: 'categories', through: { attributes: [] } },
+        { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+        { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
       ],
     });
-
-    return res.status(201).json(createdProduct);
+    res.status(201).json(createdProduct);
   } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при создании продукта', error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
-exports.editProduct = async (req, res) => {
+const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, volume, description, features, price, stock, categoryId, categoryIds } = req.body;
-
-    console.log('req body=', { title, price, stock, categoryId, categoryIds });
-
+    const { name, volume, description, features, price, stock, categoryIds } = req.body;
+    const parsedCategoryIds = categoryIds ? JSON.parse(categoryIds) : [];
     const product = await Product.findByPk(id);
     if (!product) {
-      return res.status(404).json({ message: 'Продукт не найден' });
+      return res.status(404).json({ error: 'Product not found' });
     }
-
-    // Обновляем данные продукта
     await product.update({
-      title: title || product.title,
-      volume: volume !== undefined ? volume : product.volume,
-      description: description !== undefined ? description : product.description,
-      features: features !== undefined ? features : product.features,
-      price: price ? parseFloat(price) : product.price,
-      stock: stock ? parseInt(stock) : product.stock,
-      categoryId: categoryId ? parseInt(categoryId) : product.categoryId,
+      name,
+      volume,
+      description,
+      features,
+      price: parseFloat(price),
+      stock: parseInt(stock) || 0,
     });
-
-    // Обновляем изображения
+    if (parsedCategoryIds.length > 0) {
+      await product.setCategories(parsedCategoryIds);
+    }
     if (req.files && req.files.length > 0) {
       await ProductImage.destroy({ where: { productId: id } });
       const images = req.files.map((file, index) => ({
-        productId: id,
+        productId: product.id,
         imagePath: `/Uploads/${file.filename}`,
         isPrimary: index === 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }));
       await ProductImage.bulkCreate(images);
     }
-
-    // Обновляем категории
-    if (categoryIds && Array.isArray(categoryIds)) {
-      await ProductCategory.destroy({ where: { productId: id } });
-      const productCategories = categoryIds.map((catId) => ({
-        productId: id,
-        categoryId: parseInt(catId),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
-      await ProductCategory.bulkCreate(productCategories);
-    }
-
-    // Возвращаем продукт
     const updatedProduct = await Product.findByPk(id, {
       include: [
-        { model: ProductImage, as: 'images' },
-        { model: Category, as: 'categories', through: { attributes: [] } },
+        { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+        { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
       ],
     });
-
-    return res.status(200).json(updatedProduct);
+    res.status(200).json(updatedProduct);
   } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при обновлении продукта', error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
-exports.deleteProductById = async (req, res) => {
+const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findByPk(id);
     if (!product) {
-      return res.status(404).json({ message: 'Продукт не найден' });
+      return res.status(404).json({ error: 'Product not found' });
     }
+    await ProductImage.destroy({ where: { productId: id } });
     await product.destroy();
-    return res.status(200).json({ message: 'Продукт удалён' });
+    res.status(204).send();
   } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при удалении продукта', error: error.message });
+    res.status(500).json({ error: error.message });
   }
+};
+
+module.exports = {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 };

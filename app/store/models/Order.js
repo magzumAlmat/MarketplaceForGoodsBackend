@@ -1,52 +1,35 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../../../config/db');
+const sequelize = require('../../../config/db')
 
 const Order = sequelize.define('Order', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  product_ids: {
-    type: DataTypes.ARRAY(DataTypes.ARRAY(DataTypes.INTEGER)),
-    allowNull: false,
-  },
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  address: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  status: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: 'pending',
-  },
-  totalPrice: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  paymentMethod: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  orderNotes: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
+
+    product_ids: {
+        type: DataTypes.ARRAY(DataTypes.INTEGER), // Простой массив ID
+        allowNull: true,
+    },
+    username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    address: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    status: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    totalPrice: {
+        type: DataTypes.DECIMAL(10, 2), // Для поддержки дробных чисел
+        allowNull: false,
+    },
 }, {
-  tableName: 'orders',
-  timestamps: true,
+    timestamps: true, // Добавим временные метки для отслеживания
+    tableName: 'orders',
 });
 
 module.exports = Order;

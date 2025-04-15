@@ -1,160 +1,41 @@
-# User Registration
-POST /api/store/register
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "username": "username",
-  "address": "123 Main St",
-  "phone": "123-456-7890"
-}
+// команда для первого запуска контейнера 
+docker-compose up --build 
+// команда для последующего запуска docker-compose 
+docker-compose up
 
-# User Login
-POST /api/store/login
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+// установка sequelize с доп библиотеками ( драйвер PostgreSQL (pg), и дополнительный модуль (pg-hstore), который используется для хранения данных в формате hstore.)
+npm install sequelize pg pg-hstore
 
-# Select Product
-GET /api/store/products/1
-# This request retrieves the details of a specific product by its ID.
+//дополнительный пакет Sequelize CLI, который предоставляет команды для создания и выполнения миграций.
+npm install sequelize-cli
 
-# Add Product to Cart
-POST /cart
-{
-  "productId": 1,
-  "quantity": 1
-}
-# This request adds a product to the user's cart. The product ID and quantity are specified in the request body.
+// создание миграции для модели
+npx sequelize-cli migration:generate --name <имя_миграции>
 
-# View Cart
-GET /cart
-# This request retrieves the current contents of the user's cart.
+// запускает файлы миграции для того чтобы они появились в db
+npx sequelize-cli db:migrate
 
-# Update Cart Item Quantity
-PUT /cart
-{
-  "productId": 1,
-  "quantity": 2
-}
-# This request updates the quantity of a specific product in the user's cart. The product ID and new quantity are specified in the request body.
+// для создания файла seed
+npx sequelize-cli seed:generate --name <SeederName>
 
-# Remove Product from Cart
-DELETE /cart
-{
-  "productId": 1
-}
-# This request removes a specific product from the user's cart. The product ID is specified in the request body.
 
-# Create Order
-POST /api/store/orders
-{
-  "username": "username",
-  "address": "123 Main St",
-  "phone": "123-456-7890"
-}
-# This request creates a new order. The user's personal details (username, address, and phone) are specified in the request body.
+// для запуска seed
+npx sequelize-cli db:seed --seed <seed-file-name>
 
-# User Login
-POST /api/store/login
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
 
-# Select Product
-GET /api/store/products/1
-# This request retrieves the details of a specific product by its ID.
 
-# Add Product to Cart
-POST /cart
-{
-  "productId": 1,
-  "quantity": 1
-}
-# This request adds a product to the user's cart. The product ID and quantity are specified in the request body.
+запуск на серваке
 
-# View Cart
-GET /cart
-# This request retrieves the current contents of the user's cart.
+NODE_ENV=production npx sequelize db:migrate
 
-# Update Cart Item Quantity
-PUT /cart
-{
-  "productId": 1,
-  "quantity": 2
-}
-# This request updates the quantity of a specific product in the user's cart. The product ID and new quantity are specified in the request body.
+NODE_ENV=production npx sequelize db:seed:all
 
-# Remove Product from Cart
-DELETE /cart
-{
-  "productId": 1
-}
-# This request removes a specific product from the user's cart. The product ID is specified in the request body.
 
-# Create Order
-POST /api/store/orders
-{
-  "username": "username",
-  "address": "123 Main St",
-  "phone": "123-456-7890"
-}
-# This request creates a new order. The user's personal details (username, address, and phone) are specified in the request body.
+Запуск daemon
+npm i pm2 -g
 
-# User Login
-POST /api/store/login
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+pm2 start "npm run prod" --name hh.kz
 
-# Select Product
-GET /api/store/products/1
-
-# Add Product to Cart
-POST /cart
-{
-  "productId": 1,
-  "quantity": 1
-}
-
-# View Cart
-GET /cart
-
-# Update Cart Item Quantity
-  "productId": 1
-}
-
-# Create Order
-POST /api/store/orders
-{
-  "productIds": [1],
-  "username": "username",
-  "address": "123 Main St",
-  "phone": "123-456-7890",
-  "status": "pending"
-}
-
-# Update Order Status
-PUT /api/store/orders/1/status
-{
-  "status": "shipped"
-}
-
-# Update Cart Item Quantity
-PUT /cart
-{
-  "productId": 1,
-  "quantity": 2
-}
-
-# Remove Product from Category
-DELETE /api/store/categories/1/products
-{
-  "productId": 1
-}
-
-# Delete Order
-DELETE /api/store/orders/1
-{}
+npx sequelize-cli db:migrate:undo:all
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed --seed seedproduct.js

@@ -1,7 +1,3 @@
 node_modules
-/Uploads
-Uploads
-/Uploads/*
-*.jpg
-*.png
-*.pdf
+/node_modules
+.node_modules

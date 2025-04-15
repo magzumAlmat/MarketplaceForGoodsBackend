@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/db"); = require('../../config/db')
+const sequelize = require('../../config/db')
 const Company=require("../auth/models/Company")
 const Banner = sequelize.define('Banner', {
     title: {

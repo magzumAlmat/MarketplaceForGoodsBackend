@@ -1,33 +1,25 @@
-
-
+// src/models/index.js
+const sequelize = require('../../../config/db');
 const Sequelize = require('sequelize');
-const sequelize = require('../../../config/db'); // Убедись, что путь правильный
+// Убедитесь, что путь к конфигу правильный
+
 const Product = require('./Product');
-const ProductImage = require('./ProductImage');
 const Category = require('./Category');
+const ProductImage = require('./ProductImage');
 const ProductCategory = require('./ProductCategory');
 
-// Определение связей
-Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
-ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-Product.belongsToMany(Category, {
-  through: ProductCategory,
-  foreignKey: 'productId',
-  as: 'categories',
-});
-Category.belongsToMany(Product, {
-  through: ProductCategory,
-  foreignKey: 'categoryId',
-  as: 'products',
-});
+// Установка ассоциаций
+Product.belongsToMany(Category, { through: ProductCategory, as: 'Categories', foreignKey: 'productId' });
+Category.belongsToMany(Product, { through: ProductCategory, as: 'Products', foreignKey: 'categoryId' });
+Product.hasMany(ProductImage, { as: 'ProductImages', foreignKey: 'productId' });
+ProductImage.belongsTo(Product, { foreignKey: 'productId' });
 
 // Экспорт моделей
 module.exports = {
   sequelize,
   Sequelize,
   Product,
-  ProductImage,
   Category,
+  ProductImage,
   ProductCategory,
 };

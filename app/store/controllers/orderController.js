@@ -1,212 +1,115 @@
-// src/controllers/orderController.js
-const  Product  = require('../models/Product');
-const Order =require('../models/Order')
-const User = require('../models/User');
-const Cart = require('../models/Cart');
-exports.getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.findAll();
-    return res.status(200).json(orders);
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при получении заказов', error: error.message });
-  }
-};
+// controllers/OrderController.js
+const Orders = require('../models/Order');
+const {Op} = require("sequelize");
 
-exports.getOrderById = async (req, res) => {
-  try {
+async function createOrder(req, res) {
+    console.log('createOrder started')
+    try {
+        const { product_ids, username, address, phone, status, totalPrice } = req.body;
+        console.log('Request body:', req.body);
+
+        // Валидация
+        if (!username || !address || !phone || !status || !totalPrice) {
+            return res.status(400).json({ error: 'All fields except product_ids are required' });
+        }
+        if (product_ids && !Array.isArray(product_ids)) {
+            return res.status(400).json({ error: 'product_ids must be an array' });
+        }
+
+        const newOrder = await Orders.create({
+            product_ids,
+            username,
+            address,
+            phone,
+            status,
+            totalPrice: parseFloat(totalPrice), // Убедимся, что это число
+        });
+
+        return res.status(201).json(newOrder);
+    } catch (error) {
+        console.error('Error in createOrder:', error.message, error.stack);
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+async function editOrder(req, res) {
+    const orderId = req.params.id
+    console.log(req.body, req.params.id)
+    try {
+        Orders.update({
+            username: req.body.username,
+            phone: req.body.phone,
+            address: req.body.address,
+            status: req.body.status,
+            totalPrice: req.body.totalPrice,
+        }, {
+            where: { id: orderId },
+            returning: true,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+async function getAllOrders(req, res) {
+    console.log('getAllorders started')
+    try {
+        const orders = await Orders.findAll();
+        return res.status(200).json(orders);
+    } catch (er) {
+        console.log(er)
+        return res.status(500).json({error: 'Internal Server Error'})
+    }
+}
+
+const getOrderById = async (req, res) => {
+    const {id} = req.params;
+
+    try {
+        const order = await Orders.findAll({
+            where: {
+                id: {
+                    [Op.eq]: id,
+                }
+            }
+        });
+        return res.status(200).json(order);
+    } catch (er) {
+        console.log(er)
+        return res.status(500).json({error: 'Internal Server Error'})
+    }
+
+}
+
+
+const deleteOrderById = async (req, res) => {
     const { id } = req.params;
-    const order = await Order.findByPk(id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-    // Проверяем, принадлежит ли заказ пользователю, если он не админ
-    // Предполагаем, что модель Order имеет поле userId (нужно добавить в миграцию, если отсутствует)
-    if (req.user.role !== 'admin' && order.userId !== req.user.id) {
-      return res.status(403).json({ message: 'Доступ запрещён: это не ваш заказ' });
-    }
-    return res.status(200).json(order);
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при получении заказа', error: error.message });
-  }
-};
-
-// exports.createOrder = async (req, res) => {
-//   try {
-//     const { productIds, username, address, phone, status } = req.body;
-//     console.log('create order data= ' ,productIds, username, address, phone, status)
-//     // Валидация
-//     if (!productIds || !Array.isArray(productIds) || !username || !address || !phone) {
-//       return res.status(400).json({ message: 'Необходимы productIds, username, address и phone' });
-//     }
-
-//     // Проверяем, что продукты существуют и рассчитываем общую цену
-//     const products = await Product.findAll({
-//       where: { id: productIds },
-//     });
-//     console.log('products= ',products)
-//     if (products.length !== productIds.length) {
-//       return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
-//     }
-//     const totalPrice = products.reduce((sum, product) => sum + parseFloat(product.price), 0);
-
-//     // Формируем product_ids как массив массивов для PostgreSQL
-//     const formattedProductIds = productIds.map((id) => [id]);
-
-//     // Создаём заказ
-//     const order = await Order.create({
-//       product_ids: formattedProductIds,
-//       username,
-//       address,
-//       phone,
-//       status: status || 'pending',
-//       totalPrice,
-//       // userId: req.user.id, 
-//       userId:1
-//     });
-
-//     return res.status(201).json(order);
-//   } catch (error) {
-//     return res.status(500).json({ message: 'Ошибка при создании заказа', error: error.message });
-//   }
-// };
-
-
-
-exports.createOrder = async (req, res) => {
-  try {
-    const { username, address, phone } = req.body;
-
-    // Проверяем наличие личных данных пользователя
-    if (!username || !address || !phone) {
-      return res.status(400).json({
-        message: 'Необходимы username, address и phone. Пожалуйста, заполните профиль.',
+    try {
+      // Ищем продукт по идентификатору и удаляем его
+      const order = await Orders.destroy({
+        where: { id: id },
       });
-    }
-
-    // Получаем корзину
-    const cartItems = await Cart.findAll({
-      where: { userId: req.user.id },
-      include: [{ model: Product, attributes: ['id', 'price'] }],
-    });
-
-    if (cartItems.length === 0) {
-      return res.status(400).json({ message: 'Корзина пуста' });
-    }
-
-    // Формируем productIds и проверяем продукты
-    const productIds = cartItems.map(item => item.productId);
-    const products = await Product.findAll({
-      where: { id: productIds },
-    });
-
-    if (products.length !== productIds.length) {
-      return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
-    }
-
-    // Рассчитываем totalPrice с учётом количества
-    const totalPrice = cartItems.reduce((sum, item) => {
-      const product = products.find(p => p.id === item.productId);
-      return sum + parseFloat(product.price) * item.quantity;
-    }, 0);
-
-    // Формируем product_ids
-    const formattedProductIds = productIds.map(id => [id]);
-
-    // Создаём заказ
-    const order = await Order.create({
-      product_ids: formattedProductIds,
-      username,
-      address,
-      phone,
-      status: 'pending',
-      totalPrice,
-      userId: req.user.id,
-    });
-
-    // Очищаем корзину
-    await Cart.destroy({ where: { userId: req.user.id } });
-
-    return res.status(201).json(order);
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при создании заказа', error: error.message });
-  }
-};
-
-
-
-exports.editOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { productIds, username, address, phone, status } = req.body;
-
-    const order = await Order.findByPk(id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-
-    let totalPrice = order.totalPrice;
-    let formattedProductIds = order.product_ids;
-
-    // Если переданы новые productIds, проверяем продукты и пересчитываем цену
-    if (productIds && Array.isArray(productIds)) {
-      const products = await Product.findAll({
-        where: { id: productIds },
-      });
-      if (products.length !== productIds.length) {
-        return res.status(400).json({ message: 'Один или несколько продуктов не найдены' });
+  
+      // Если продукт не найден, возвращаем ошибку
+      if (!order) {
+        return res.status(404).json({ error: "Product not found" });
       }
-      totalPrice = products.reduce((sum, product) => sum + parseFloat(product.price), 0);
-      formattedProductIds = productIds.map((id) => [id]);
+  
+      // Возвращаем успешный статус и информацию об удаленном продукте
+      return res.status(200).json({
+        message: "Product deleted successfully",
+        deletedOrder: order,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
-
-    // Обновляем заказ
-    await order.update({
-      product_ids: formattedProductIds,
-      username: username || order.username,
-      address: address || order.address,
-      phone: phone || order.phone,
-      status: status || order.status,
-      totalPrice,
-    });
-
-    return res.status(200).json(order);
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при обновлении заказа', error: error.message });
-  }
-};
-
-exports.updateOrderStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ message: 'Необходимо указать статус' });
-    }
-
-    const order = await Order.findByPk(id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-
-    await order.update({ status });
-
-    return res.status(200).json(order);
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при обновлении статуса заказа', error: error.message });
-  }
-};
-
-exports.deleteOrderById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const order = await Order.findByPk(id);
-    if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
-    }
-    await order.destroy();
-    return res.status(200).json({ message: 'Заказ удалён' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Ошибка при удалении заказа', error: error.message });
-  }
-};
+  };
+module.exports = {
+    getOrderById,
+    getAllOrders,
+    createOrder,
+    editOrder,
+    deleteOrderById
+}

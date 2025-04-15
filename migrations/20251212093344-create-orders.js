@@ -1,24 +1,26 @@
 'use strict';
 
+const { DataTypes } = require('sequelize');
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('orders', {
+    await queryInterface.createTable('orders', { // Нижний регистр для имени таблицы
       id: {
-        type: Sequelize.INTEGER,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false,
+        type: Sequelize.INTEGER,
       },
       product_ids: {
-        type: Sequelize.ARRAY(Sequelize.ARRAY(Sequelize.INTEGER)),
-        allowNull: false,
+        type: Sequelize.ARRAY(Sequelize.INTEGER), // Одномерный массив
+        allowNull: true,
       },
       username: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       address: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: false,
       },
       phone: {
@@ -28,30 +30,25 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: 'pending',
       },
       totalPrice: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-      },
-      userId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DECIMAL(10, 2), // Для дробных чисел
         allowNull: false,
       },
       createdAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('orders');
+    await queryInterface.dropTable('orders'); // Нижний регистр
   },
 };

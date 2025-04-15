@@ -1,3 +1,4 @@
+// src/migrations/2025041301-create-products.js
 'use strict';
 
 module.exports = {
@@ -5,45 +6,41 @@ module.exports = {
     await queryInterface.createTable('products', {
       id: {
         type: Sequelize.INTEGER,
-        autoIncrement: true,
         primaryKey: true,
-        allowNull: false,
+        autoIncrement: true,
       },
-      title: {
+      name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      price: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
+      volume: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       description: {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      categoryId: {
-        type: Sequelize.INTEGER,
+      features: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+      price: {
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
-      stockQuantity: {
+      stock: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      isAvailable: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: true,
-      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },

@@ -1,10 +1,16 @@
+// src/models/ProductCategory.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db');
 
 const ProductCategory = sequelize.define('ProductCategory', {
-  productId: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
+  },
+  productId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
       model: 'products',
       key: 'id',
@@ -12,15 +18,15 @@ const ProductCategory = sequelize.define('ProductCategory', {
   },
   categoryId: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
+    allowNull: false,
     references: {
       model: 'categories',
       key: 'id',
     },
   },
 }, {
+  timestamps: false,
   tableName: 'product_categories',
-  timestamps: true,
 });
 
 module.exports = ProductCategory;
