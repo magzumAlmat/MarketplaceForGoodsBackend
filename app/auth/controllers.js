@@ -6,16 +6,109 @@
 // const jwt = require('jsonwebtoken');
 // const {jwtOptions} = require('./passport');
 // const { where } = require("sequelize");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../auth/models/User');
+
+const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret';
+
 
 const { Op } = require('sequelize');
 const AuthCode = require('./models/AuthCode')
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt')
-const User = require('./models/User')
+
+
+
 const Role = require('./models/Role')
 const {jwtOptions} = require('./passport');
 const Company= require('./models/Company')
 const sendEmail = require('../utils/sendMail')
+
+
+
+async function register(req, res) {
+  try {
+    const { username, password, phone, role } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const existingUser = await User.findOne({ where: { username } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      username,
+      password: hashedPassword,
+      phone,
+      role: role || 'user',
+    });
+
+    return res.status(201).json({ message: 'User registered successfully', user: { id: user.id, username, role } });
+  } catch (error) {
+    console.error('Error in register:', error.message);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function login(req, res) {
+  try {
+    console.log('Request body:', req.body);
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const user = await User.findOne({ where: { username } });
+    console.log('Found user:', user ? user.dataValues : 'User not found');
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Временно заменяем bcrypt на прямое сравнение
+    const isPasswordValid = password === user.password;
+    console.log('Password valid:', isPasswordValid);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      SECRET_KEY,
+      { expiresIn: '1h' }
+    );
+
+    return res.status(200).json({ 
+      token, 
+      user: { id: user.id, username: user.username }
+    });
+  } catch (error) {
+    console.error('Error in login:', error.message);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function check(req, res) {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ id: user.id, username: user.username, role: user.role });
+  } catch (error) {
+    console.error('Error in check:', error.message);
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
 
 
 const getAuthentificatedUserInfo=async(req,res)=>{
@@ -622,88 +715,43 @@ const signUp = async (req, res) =>{
 //   //       res.status(500).send(error)
 //   //   }      
 // }
-const logIn = async (req, res) =>{
-  console.log('iam in auth user')
-  let user = await User.findOne({where: {email: req.body.email}});
-
-  const {  password } = req.body;
-
-  // const isPasswordValid = await bcrypt.compare(password, user.password);
-  if(password===user.password){
-                    isPasswordValid=true
-                  }
-                  else{
-                    isPasswordValid=false
-                  }
-  console.log(user,'COMPARE=',password,'==',user.password,'isMtch=',isPasswordValid)
-  if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
-  const token = jwt.sign({
-      id: user.id,
-      email: user.email,
-      password:user.password,
-  }, jwtOptions.secretOrKey, {
-      expiresIn: 24 * 60 * 60 * 365
-  });
-  res.status(200).json({ prompt: 'Authorization successful' ,token});
-
-
-
-// console.log('LOGIN ',req.body.email,req.body.password)
+// const logIn = async (req, res) => {
 //   try {
-//       if(
-//           !req.body.email
-//           || req.body.email.length === 0
-//           || !req.body.password
-//           || req.body.password.length === 0){
-//               res.status(401).send({message: "Bad credentials"})
-//           }else{
-//               const user = await User.findOne({
-//                   where: {
-//                       email: req.body.email
-//                   }
-//               })
-//               if(!user) return res.status(401).send({message: "User with that email is not exists"})
+//     const user = await User.findOne({ where: { email: req.body.email } });
+//     if (!user) {
+//       return res.status(401).json({ error: 'Invalid email or password' });
+//     }
 
-              
-//               // const isMatch = await bcrypt.compare(req.body.password, user.password)
-//               if(req.body.password===user.password){
-//                 isMatch=true
-//               }
-//               else{
-//                 isMatch=false
-//               }
+//     const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ error: 'Invalid email or password' });
+//     }
 
-//               console.log(user,'COMPARE=',typeof(req.body.password),'==',typeof(user.password),'isMtch=',isMatch)
-              
-//               if(isMatch){
-//                   const role = await Role.findByPk(user.roleId)
-//                   const token = jwt.sign({
-//                       id: user.id,
-//                       email: user.email,
-//                       role: {
-//                           id: role.id,
-//                           name: role.name
-//                       }
-//                   }, jwtOptions.secretOrKey, {
-//                       expiresIn: 24 * 60 * 60 * 365
-//                   });
-//                   res.status(200).send({token});
-//               }else{
-//                   res.status(401).send({message: "Password is incorrect"})
-//               }
-//           }
+//     const token = jwt.sign({
+//       id: user.id,
+//       email: user.email,
+//       role: user.role || 'ADMIN', // Предполагаем, что в модели User есть поле role
+//     }, process.env.JWT_SECRET, {
+//       expiresIn: '365d'
+//     });
+
+//     res.status(200).json({ 
+//       prompt: 'Authorization successful',
+//       token 
+//     });
 //   } catch (error) {
-//       res.status(500).send(error)
-//   }      
-}
+//     console.error(error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// };
 
 module.exports={
     sendVerificationEmail,allCompanies,
     verifyCode,
-    signUp,
-    logIn,getAuthentificatedUserInfo,
+    signUp,register,login,check,
+
+    // logIn,
+    getAuthentificatedUserInfo,
     createCompany,addFullProfile,
     verifyCodeInspector,companySearchByBin,companySearchByContactEmail,companySearchByContactPhone,companySearchByName
 }

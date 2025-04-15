@@ -4,7 +4,7 @@ const Role = require('./Role')
 const Company = require('./Company')
 
 const User = sequelize.define('User', {
-    email: {
+    username: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,

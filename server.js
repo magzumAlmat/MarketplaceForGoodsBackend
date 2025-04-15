@@ -4,7 +4,7 @@ const express=require('express')
 const logger=require('morgan') // для логирования кто к нам по какому запросу стучался
 const passport =require('passport')
 const multer=require('multer') // для formdata
-
+require('dotenv').config();
 const app=express();
 //middleware 1----
 cors = require('cors')
