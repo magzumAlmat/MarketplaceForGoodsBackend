@@ -1,5 +1,5 @@
-const Role = require('./models/Role')
-const User = require('./models/User')
+const Role = require('../store/models/Role')
+const User = require('../store/models/User')
 
 const isEmployee = async (req, res, next) => {
     console.log('isEmployee started')

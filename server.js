@@ -2,7 +2,7 @@
 const path = require("path");
 const express=require('express')
 const logger=require('morgan') // для логирования кто к нам по какому запросу стучался
-
+const passport =require('passport')
 const multer=require('multer') // для formdata
 
 const app=express();
@@ -31,7 +31,9 @@ app.use(express.static(__dirname));
 //     console.log(req.body)
 //     res.status(200).send('POST /api works | Success!')
 // })
+app.use(passport.initialize());
 
+app.use(require('./app/auth/routes'))
 app.use('/', require('./app/store/routes/routes'));
 // app.use(require('./app/region/routes'))
 // app.use(require('./app/skills/routes'))

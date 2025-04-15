@@ -546,83 +546,158 @@ const signUp = async (req, res) =>{
     }
 }
 
+// const logIn = async (req, res) =>{
+//     console.log('iam in auth user')
+//     let user = await User.findOne({where: {email: req.body.email}});
+
+//     const {  password } = req.body;
+
+//     // const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if(password===user.password){
+//                       isPasswordValid=true
+//                     }
+//                     else{
+//                       isPasswordValid=false
+//                     }
+//     console.log(user,'COMPARE=',password,'==',user.password,'isMtch=',isPasswordValid)
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ error: 'Invalid email or password' });
+//     }
+//     const token = jwt.sign({
+//         id: user.id,
+//         email: user.email,
+//         password:user.password,
+//     }, jwtOptions.secretOrKey, {
+//         expiresIn: 24 * 60 * 60 * 365
+//     });
+//     res.status(200).json({ prompt: 'Authorization successful' ,token});
+
+
+
+//   // console.log('LOGIN ',req.body.email,req.body.password)
+//   //   try {
+//   //       if(
+//   //           !req.body.email
+//   //           || req.body.email.length === 0
+//   //           || !req.body.password
+//   //           || req.body.password.length === 0){
+//   //               res.status(401).send({message: "Bad credentials"})
+//   //           }else{
+//   //               const user = await User.findOne({
+//   //                   where: {
+//   //                       email: req.body.email
+//   //                   }
+//   //               })
+//   //               if(!user) return res.status(401).send({message: "User with that email is not exists"})
+
+                
+//   //               // const isMatch = await bcrypt.compare(req.body.password, user.password)
+//   //               if(req.body.password===user.password){
+//   //                 isMatch=true
+//   //               }
+//   //               else{
+//   //                 isMatch=false
+//   //               }
+
+//   //               console.log(user,'COMPARE=',typeof(req.body.password),'==',typeof(user.password),'isMtch=',isMatch)
+                
+//   //               if(isMatch){
+//   //                   const role = await Role.findByPk(user.roleId)
+//   //                   const token = jwt.sign({
+//   //                       id: user.id,
+//   //                       email: user.email,
+//   //                       role: {
+//   //                           id: role.id,
+//   //                           name: role.name
+//   //                       }
+//   //                   }, jwtOptions.secretOrKey, {
+//   //                       expiresIn: 24 * 60 * 60 * 365
+//   //                   });
+//   //                   res.status(200).send({token});
+//   //               }else{
+//   //                   res.status(401).send({message: "Password is incorrect"})
+//   //               }
+//   //           }
+//   //   } catch (error) {
+//   //       res.status(500).send(error)
+//   //   }      
+// }
 const logIn = async (req, res) =>{
-    console.log('iam in auth user')
-    let user = await User.findOne({where: {email: req.body.email}});
+  console.log('iam in auth user')
+  let user = await User.findOne({where: {email: req.body.email}});
 
-    const {  password } = req.body;
+  const {  password } = req.body;
 
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
-    if(password===user.password){
-                      isPasswordValid=true
-                    }
-                    else{
-                      isPasswordValid=false
-                    }
-    console.log(user,'COMPARE=',password,'==',user.password,'isMtch=',isPasswordValid)
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-    const token = jwt.sign({
-        id: user.id,
-        email: user.email,
-        password:user.password,
-    }, jwtOptions.secretOrKey, {
-        expiresIn: 24 * 60 * 60 * 365
-    });
-    res.status(200).json({ prompt: 'Authorization successful' ,token});
+  // const isPasswordValid = await bcrypt.compare(password, user.password);
+  if(password===user.password){
+                    isPasswordValid=true
+                  }
+                  else{
+                    isPasswordValid=false
+                  }
+  console.log(user,'COMPARE=',password,'==',user.password,'isMtch=',isPasswordValid)
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+  const token = jwt.sign({
+      id: user.id,
+      email: user.email,
+      password:user.password,
+  }, jwtOptions.secretOrKey, {
+      expiresIn: 24 * 60 * 60 * 365
+  });
+  res.status(200).json({ prompt: 'Authorization successful' ,token});
 
 
 
-  // console.log('LOGIN ',req.body.email,req.body.password)
-  //   try {
-  //       if(
-  //           !req.body.email
-  //           || req.body.email.length === 0
-  //           || !req.body.password
-  //           || req.body.password.length === 0){
-  //               res.status(401).send({message: "Bad credentials"})
-  //           }else{
-  //               const user = await User.findOne({
-  //                   where: {
-  //                       email: req.body.email
-  //                   }
-  //               })
-  //               if(!user) return res.status(401).send({message: "User with that email is not exists"})
+// console.log('LOGIN ',req.body.email,req.body.password)
+//   try {
+//       if(
+//           !req.body.email
+//           || req.body.email.length === 0
+//           || !req.body.password
+//           || req.body.password.length === 0){
+//               res.status(401).send({message: "Bad credentials"})
+//           }else{
+//               const user = await User.findOne({
+//                   where: {
+//                       email: req.body.email
+//                   }
+//               })
+//               if(!user) return res.status(401).send({message: "User with that email is not exists"})
 
-                
-  //               // const isMatch = await bcrypt.compare(req.body.password, user.password)
-  //               if(req.body.password===user.password){
-  //                 isMatch=true
-  //               }
-  //               else{
-  //                 isMatch=false
-  //               }
+              
+//               // const isMatch = await bcrypt.compare(req.body.password, user.password)
+//               if(req.body.password===user.password){
+//                 isMatch=true
+//               }
+//               else{
+//                 isMatch=false
+//               }
 
-  //               console.log(user,'COMPARE=',typeof(req.body.password),'==',typeof(user.password),'isMtch=',isMatch)
-                
-  //               if(isMatch){
-  //                   const role = await Role.findByPk(user.roleId)
-  //                   const token = jwt.sign({
-  //                       id: user.id,
-  //                       email: user.email,
-  //                       role: {
-  //                           id: role.id,
-  //                           name: role.name
-  //                       }
-  //                   }, jwtOptions.secretOrKey, {
-  //                       expiresIn: 24 * 60 * 60 * 365
-  //                   });
-  //                   res.status(200).send({token});
-  //               }else{
-  //                   res.status(401).send({message: "Password is incorrect"})
-  //               }
-  //           }
-  //   } catch (error) {
-  //       res.status(500).send(error)
-  //   }      
+//               console.log(user,'COMPARE=',typeof(req.body.password),'==',typeof(user.password),'isMtch=',isMatch)
+              
+//               if(isMatch){
+//                   const role = await Role.findByPk(user.roleId)
+//                   const token = jwt.sign({
+//                       id: user.id,
+//                       email: user.email,
+//                       role: {
+//                           id: role.id,
+//                           name: role.name
+//                       }
+//                   }, jwtOptions.secretOrKey, {
+//                       expiresIn: 24 * 60 * 60 * 365
+//                   });
+//                   res.status(200).send({token});
+//               }else{
+//                   res.status(401).send({message: "Password is incorrect"})
+//               }
+//           }
+//   } catch (error) {
+//       res.status(500).send(error)
+//   }      
 }
-
 
 module.exports={
     sendVerificationEmail,allCompanies,
