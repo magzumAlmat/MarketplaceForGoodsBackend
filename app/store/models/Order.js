@@ -3,10 +3,7 @@ const sequelize = require('../../../config/db')
 
 const Order = sequelize.define('Order', {
 
-    product_ids: {
-        type: DataTypes.ARRAY(DataTypes.INTEGER), // Простой массив ID
-        allowNull: true,
-    },
+ 
     username: {
         type: DataTypes.STRING,
         allowNull: false,

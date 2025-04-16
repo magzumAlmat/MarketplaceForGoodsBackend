@@ -11,10 +11,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      product_ids: {
-        type: Sequelize.ARRAY(Sequelize.INTEGER), // Одномерный массив
-        allowNull: true,
-      },
+    
       username: {
         type: Sequelize.STRING,
         allowNull: false,

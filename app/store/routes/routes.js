@@ -31,6 +31,12 @@ const {
   deleteCategory,
 } = require("../controllers/categoryController");
 
+
+// const createOrder = require('../controllers/orderController');
+
+router.post('/api/store/orders', createOrder);
+
+
     router.post("/api/store/categories", createCategory);
     router.get("/api/store/getallcategories", listCategories);
     router.get("/api/store/categories/:id", getCategoryById);
