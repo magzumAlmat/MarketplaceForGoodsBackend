@@ -3,7 +3,11 @@ const { Product, Category, ProductImage } = require('../models');
 const getAllProducts = async (req, res) => {
   console.log('GetAllProducts started');
   try {
-    const products = await Product.findAll(); // Без include
+    const products = await Product.findAll(
+      {include: [
+      { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+      { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
+    ]}); // Без include
     console.log('Products fetched:', products.length);
     res.status(200).json(products);
   } catch (error) {

@@ -1,24 +1,28 @@
-const multer = require('multer')
+// middleware/multer.js
+const multer = require("multer");
+const path = require("path");
 
 const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "Uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
 
-    destination: function (req, file, cb) {
-
-        cb(null, './public/cable/');
-    },
-    filename: function (req, file, cb) {
-        console.log('in utils', file)
-        let ext = file.originalname.split('.');
-        ext = ext[ext.length - 1];
-        const filename = "_" + Date.now() + "." + ext;
-        cb(null, filename);
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|gif/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
     }
-})
+    cb(new Error("Only images are allowed!"));
+  },
+});
 
-
-
-const upload = multer({storage})
-
-module.exports = {
-    upload
-}
+module.exports = upload; // Экспортируем upload напрямую
