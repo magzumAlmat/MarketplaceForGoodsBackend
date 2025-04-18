@@ -2,7 +2,7 @@
 const Orders = require('../models/Order');
 const {Op} = require("sequelize");
 const OrderProduct = require('../models/OrderProduct');
-
+const Product =require('../models/Product')
 async function createOrder  (req, res)  {
   try {
     const { username, phone, address, status, totalPrice, products } = req.body;
@@ -160,10 +160,66 @@ const deleteOrderById = async (req, res) => {
       return res.status(500).json({ error: "Internal Server Error" });
     }
   };
+
+
+// Получение заказа по ID с продуктами и их количеством
+const getOrderProductById = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      // Проверка, является ли id числом
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Некорректный ID заказа' });
+      }
+  
+      // Поиск заказа с включением связанных продуктов
+      const order = await Orders.findByPk(id, {
+        include: [
+          {
+            model: OrderProduct,
+            as: 'OrderProducts', // Указываем псевдоним, если он определён в модели
+            attributes: ['count'], // Получаем только поле count
+            include: [
+              {
+                model: Product,
+                attributes: ['id', 'name', 'price'], // Выбираем нужные поля продукта
+              },
+            ],
+          },
+        ],
+      });
+  
+      // Проверка, существует ли заказ
+      if (!order) {
+        return res.status(404).json({ message: 'Заказ не найден' });
+      }
+  
+      // Формирование ответа
+      res.status(200).json({
+        id: order.id,
+        status: order.status, // Предполагается, что в модели Order есть поле status
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        products: order.OrderProducts.map((orderProduct) => ({
+          productId: orderProduct.Product.id,
+          name: orderProduct.Product.name,
+          price: orderProduct.Product.price,
+          count: orderProduct.count,
+        })),
+      });
+    } catch (error) {
+      console.error('Ошибка при получении заказа:', error);
+      res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+    }
+  };
+
+
+
 module.exports = {
     getOrderById,
     getAllOrders,
     createOrder,
     editOrder,
-    deleteOrderById
+    deleteOrderById,
+    getOrderProductById
 }

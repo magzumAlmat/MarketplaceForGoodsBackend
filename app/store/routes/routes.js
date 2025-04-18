@@ -31,8 +31,10 @@ const {
   deleteCategory,
 } = require("../controllers/categoryController");
 
+const {getOrderProductById} = require('../controllers/orderController')
 
 // const createOrder = require('../controllers/orderController');
+router.get('/api/store/orderproductbyid/:id',getOrderProductById)
 
 router.post('/api/store/orders', createOrder);
 
@@ -62,7 +64,7 @@ router.delete('/api/store/order/:id', deleteOrderById);
 router.put('/api/store/product/:id', upload.array('image',5), updateProduct);
 
 router.post('/api/store/createorder', createOrder);
-router.post('/api/store/order/:id/editorder', editOrder);
+router.patch('/api/store/order/:id/editorder', editOrder);
 
 router.post('/api/store/login', doLogin);
 

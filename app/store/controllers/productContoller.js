@@ -1,13 +1,93 @@
 const { Product, Category, ProductImage } = require('../models');
 
+// const getAllProducts = async (req, res) => {
+//   console.log('GetAllProducts started');
+//   try {
+//     const products = await Product.findAll(
+//       {include: [
+//       { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+//       { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
+//     ]}); // Без include
+//     console.log('Products fetched:', products.length);
+//     res.status(200).json(products);
+//   } catch (error) {
+//     console.error('Error in getAllProducts:', error.message, error.stack);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
 const getAllProducts = async (req, res) => {
   console.log('GetAllProducts started');
   try {
-    const products = await Product.findAll(
-      {include: [
-      { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
-      { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
-    ]}); // Без include
+    const { mainType, type, category, search, minPrice, maxPrice, sortBy } = req.query;
+
+    // Базовые условия для фильтрации
+    const where = {};
+    if (type) {
+      where.type = type;
+    }
+    if (minPrice) {
+      where.price = { [Op.gte]: parseFloat(minPrice) };
+    }
+    if (maxPrice) {
+      where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
+    }
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
+    // Условия для категорий
+    const categoryWhere = {};
+    if (mainType && mainType !== "Все товары") {
+      categoryWhere.name = mainType;
+    }
+    if (category && category !== "Все товары") {
+      categoryWhere.name = category;
+    }
+
+    // Сортировка
+    const order = [];
+    if (sortBy) {
+      switch (sortBy) {
+        case "price_asc":
+          order.push(["price", "ASC"]);
+          break;
+        case "price_desc":
+          order.push(["price", "DESC"]);
+          break;
+        case "name_asc":
+          order.push(["name", "ASC"]);
+          break;
+        case "name_desc":
+          order.push(["name", "DESC"]);
+          break;
+      }
+    }
+
+    const products = await Product.findAll({
+      where,
+      include: [
+        {
+          model: Category,
+          attributes: ['id', 'name'],
+          as: 'Categories',
+          through: { attributes: [] },
+          where: categoryWhere.name ? categoryWhere : undefined,
+        },
+        {
+          model: ProductImage,
+          attributes: ['id', 'imagePath', 'isPrimary'],
+          as: 'ProductImages',
+        },
+      ],
+      order,
+    });
+
     console.log('Products fetched:', products.length);
     res.status(200).json(products);
   } catch (error) {
@@ -15,6 +95,8 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 const getProductById = async (req, res) => {
   try {
@@ -35,6 +117,7 @@ const getProductById = async (req, res) => {
 };
 
 const createProduct = async (req, res) => {
+  console.log('Create Product started')
   try {
     const { name, volume, description, features, price, stock, categoryIds } = req.body;
     const parsedCategoryIds = categoryIds ? JSON.parse(categoryIds) : []; // Handle form-data string
