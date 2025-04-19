@@ -1,5 +1,16 @@
 const { Product, Category, ProductImage } = require('../models');
+const multer = require('multer');
+const path = require('path');
 
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'Uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${file.mimetype.split('/')[1]}`);
+  },
+});
 // const getAllProducts = async (req, res) => {
 //   console.log('GetAllProducts started');
 //   try {
@@ -152,27 +163,121 @@ const createProduct = async (req, res) => {
   }
 };
 
+
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Ограничение размера файла 5MB
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Только изображения формата JPEG, JPG или PNG!'));
+  },
+}).array('image', 5); // 'image' — имя поля для файлов, максимум 5 файлов
+
+// const updateProduct = async (req, res) => {
+//   console.log('я внутри editProduct')
+//   try {
+//     const { id } = req.params;
+//     const { name, volume, description, features, price, stock, categoryIds } = req.body;
+//     const parsedCategoryIds = categoryIds ? JSON.parse(categoryIds) : [];
+//     const product = await Product.findByPk(id);
+//     if (!product) {
+//       return res.status(404).json({ error: 'Product not found' });
+//     }
+//     console.log('данные которые заходят',name, volume, description, features, price, stock, categoryIds)
+//     await product.update({
+//       name,
+//       volume,
+//       description,
+//       features,
+//       price: parseFloat(price),
+//       stock: parseInt(stock) || 0,
+//     });
+//     if (parsedCategoryIds.length > 0) {
+//       await product.setCategories(parsedCategoryIds);
+//     }
+//     if (req.files && req.files.length > 0) {
+//       await ProductImage.destroy({ where: { productId: id } });
+//       const images = req.files.map((file, index) => ({
+//         productId: product.id,
+//         imagePath: `/Uploads/${file.filename}`,
+//         isPrimary: index === 0,
+//       }));
+//       await ProductImage.bulkCreate(images);
+//     }
+//     const updatedProduct = await Product.findByPk(id, {
+//       include: [
+//         { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
+//         { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
+//       ],
+//     });
+//     res.status(200).json(updatedProduct);
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// };
+
+// Контроллер updateProduct
 const updateProduct = async (req, res) => {
+  console.log('я внутри editProduct');
   try {
     const { id } = req.params;
-    const { name, volume, description, features, price, stock, categoryIds } = req.body;
-    const parsedCategoryIds = categoryIds ? JSON.parse(categoryIds) : [];
+
+    // Логируем все данные, которые пришли с фронтенда
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files);
+
+    // Извлекаем текстовые поля из req.body
+    const name = req.body.name || undefined;
+    const volume = req.body.volume || undefined;
+    const description = req.body.description || undefined;
+    const features = req.body.features || undefined;
+    const price = req.body.price ? parseFloat(req.body.price) : undefined;
+    const stock = req.body.stock ? parseInt(req.body.stock) : undefined;
+    const categoryIds = req.body.categoryIds ? JSON.parse(req.body.categoryIds) : [];
+    const removedImageIds = req.body.removedImageIds ? JSON.parse(req.body.removedImageIds) : [];
+
+    // Логируем извлеченные данные
+    console.log('данные которые заходят:', { name, volume, description, features, price, stock, categoryIds, removedImageIds });
+
     const product = await Product.findByPk(id);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
+    // Обновляем данные продукта
     await product.update({
       name,
-      volume,
+      volume: volume === '' ? null : volume,
       description,
       features,
-      price: parseFloat(price),
-      stock: parseInt(stock) || 0,
+      price,
+      stock: stock || 0,
     });
-    if (parsedCategoryIds.length > 0) {
-      await product.setCategories(parsedCategoryIds);
+
+    // Обновляем категории
+    if (categoryIds.length > 0) {
+      await product.setCategories(categoryIds);
     }
+
+    // Удаляем изображения, указанные в removedImageIds
+    if (removedImageIds.length > 0) {
+      await ProductImage.destroy({
+        where: {
+          id: removedImageIds,
+          productId: id,
+        },
+      });
+    }
+
+    // Добавляем новые изображения, если они есть
     if (req.files && req.files.length > 0) {
+      // Удаляем старые изображения, если добавляются новые
       await ProductImage.destroy({ where: { productId: id } });
       const images = req.files.map((file, index) => ({
         productId: product.id,
@@ -181,14 +286,18 @@ const updateProduct = async (req, res) => {
       }));
       await ProductImage.bulkCreate(images);
     }
+
+    // Получаем обновленный продукт
     const updatedProduct = await Product.findByPk(id, {
       include: [
         { model: Category, attributes: ['id', 'name'], as: 'Categories', through: { attributes: [] } },
         { model: ProductImage, attributes: ['id', 'imagePath', 'isPrimary'], as: 'ProductImages' },
       ],
     });
+
     res.status(200).json(updatedProduct);
   } catch (error) {
+    console.error('Ошибка в updateProduct:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -213,5 +322,5 @@ module.exports = {
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct,
+  deleteProduct,upload
 };

@@ -67,5 +67,6 @@ router.post('/api/store/createorder', createOrder);
 router.patch('/api/store/order/:id/editorder', editOrder);
 
 router.post('/api/store/login', doLogin);
+router.put('/api/store/edit-product/:id',upload.array('image',5),updateProduct)
 
 module.exports = router;
