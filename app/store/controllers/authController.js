@@ -10,7 +10,9 @@ async function doLogin(req, res) {
     username: 'admin',
     name: 'Admin User',
     role: 'ADMIN',
-    password: '$2a$12$9PMW/PsEWRa8X29TA/O5judBbnQtnTm4kcfR7cepKISmM7Dn2Rvku', // Хэш пароля
+    password: '$2a$12$p8EnnAAbTfSEnZOofMGd4uEIf4BrUXTZNM0ZRkDb4oTG4hErG0B5a', // Хэш пароля.                  jKez2bd6TXNpcqT7kCHh
+
+
   };
 
   try {

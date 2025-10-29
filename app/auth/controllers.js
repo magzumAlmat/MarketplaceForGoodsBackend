@@ -91,6 +91,7 @@ async function login(req, res) {
 }
 
 async function check(req, res) {
+  console.log('check function strted! ')
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -109,6 +110,8 @@ async function check(req, res) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
+
+
 
 
 const getAuthentificatedUserInfo=async(req,res)=>{
