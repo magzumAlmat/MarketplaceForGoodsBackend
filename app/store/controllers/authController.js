@@ -19,6 +19,12 @@ async function doLogin(req, res) {
   try {
     const { email, password } = req.body;
     console.log('doLogin: input:', { email, password });
+    console.log('Введённый email:', email);
+    console.log('Ожидаемый email:', staticUserData.email);
+    console.log('Введённый пароль:', password);
+
+
+    
     bcrypt.hash('root', 12).then(hash => console.log(hash));
     // Проверка email
     if (email !== staticUserData.email) {
@@ -48,7 +54,7 @@ async function doLogin(req, res) {
 
     console.log('doLogin: success, token generated');
 
-    
+
     return res.status(200).json({
       token,
       user: {
