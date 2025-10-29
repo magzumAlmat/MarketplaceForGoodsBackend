@@ -12,7 +12,7 @@ const { register, login, check } = require('../auth/controllers');
 router.post('/auth/register', register);
 router.post('/auth/login', login);
 router.get('/auth/check', middleware.authMiddleware, check);
-
+router.post('https://totu.kz/api/store/auth/login',login)
 // // Защитите админ-роуты
 // router.post('/store/createorder', middleware.authMiddleware, middleware.adminMiddleware, createOrder);
 // router.get('/store/allorders', middleware.authMiddleware, middleware.adminMiddleware, getAllOrders);
