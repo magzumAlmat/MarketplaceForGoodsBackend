@@ -11,6 +11,7 @@ async function doLogin(req, res) {
     name: 'Admin User',
     role: 'ADMIN',
     password: '$2a$12$p8EnnAAbTfSEnZOofMGd4uEIf4BrUXTZNM0ZRkDb4oTG4hErG0B5a', // Хэш пароля.                  jKez2bd6TXNpcqT7kCHh
+     //        $2a$12$p8EnnAAbTfSEnZOofMGd4uEIf4BrUXTZNM0ZRkDb4oTG4hErG0B5a                                   jKez2bd6TXNpcqT7kCHh
 
 
   };
@@ -46,6 +47,8 @@ async function doLogin(req, res) {
     );
 
     console.log('doLogin: success, token generated');
+
+    
     return res.status(200).json({
       token,
       user: {

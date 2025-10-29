@@ -6,7 +6,8 @@ const ExtractJWT = passportJWT.ExtractJwt;
 const User = require('../store/models/User')
 const jwtOptions = {
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'секретный_ключ',
+    // secretOrKey: 'секретный_ключ',
+    secretOrKey:'your_jwt_secret'
 };
 
 passport.use(new JWTStrategy(jwtOptions, async (jwtPayload, done) => {
