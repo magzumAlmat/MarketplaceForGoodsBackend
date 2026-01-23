@@ -4,7 +4,7 @@
 BACKUP_DIR="$(pwd)/backups"
 DB_USER="admin"
 DB_NAME="admin"
-DB_PASSWORD="root"  # Replace with your actual password
+DB_PASSWORD="SecureDevPass2026!"  # Replace with your actual password
 CONTAINER_NAME="kazniisaLMS_db"
 DATE=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=7

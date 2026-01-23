@@ -2,7 +2,7 @@ const fs = require("fs");
 module.exports = {
   development: {
     username: "admin",
-    password: "root",
+    password: "SecureDevPass2026!",
     database: "admin",
     host: "localhost",
     dialect: "postgres",

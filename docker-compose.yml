@@ -4,8 +4,8 @@ services:
   store_db:
     container_name: store_db
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     environment:
-      - POSTGRES_PASSWORD=root
+      - POSTGRES_PASSWORD=SecureDevPass2026!
       - POSTGRES_USER=admin
     image: postgres:15.3-alpine
